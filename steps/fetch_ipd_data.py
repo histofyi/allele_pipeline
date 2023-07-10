@@ -23,5 +23,3 @@ for datasource in ['IPD_IMGT_HLA_PROT','IPD_MHC_PROT']:
     download_command = f'wget {fasta_url} -O {filepath}'
 
     os.system(download_command)
-
-    #os.system()
