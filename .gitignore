@@ -136,3 +136,4 @@ config.toml
 
 #tmp
 tmp/*
+output/*
