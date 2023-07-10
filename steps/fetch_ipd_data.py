@@ -1,25 +1,36 @@
 import os
+import datetime
+
+from typing import Dict
 from rich import print, rule
+
+import requests
 
 from common.pipeline import load_config
 
+def fetch_ipd_data(config:Dict, force:bool = False):
 
-config = load_config()
+    print("")
+    for datasource in ['IPD_IMGT_HLA_PROT','IPD_MHC_PROT']:
+        
+        filepath = f'{config["TMP_PATH"]}/{datasource.lower()}.fasta'
 
-print ()
+        if not os.path.exists(filepath) or force is True:
 
-for datasource in ['IPD_IMGT_HLA_PROT','IPD_MHC_PROT']:
+            fasta_url = config[datasource]
 
-    
-    filepath = f'{config["TMP_PATH"]}/{datasource.lower()}.fasta'
-    fasta_url = config[datasource]
+            print (f"Fetching {datasource} sequences")
+            print ('')
 
-    print (datasource)
-    print (filepath)
-    print (fasta_url)
-    print ('')
-    rule
+            print (fasta_url)
 
-    download_command = f'wget {fasta_url} -O {filepath}'
+            download_command = f'wget {fasta_url} -O {filepath}'
+            os.system(download_command)
 
-    os.system(download_command)
+        else:
+
+            print (f"{datasource} sequences already downloaded on {datetime.datetime.fromtimestamp(os.path.getmtime(filepath))}")
+            print ('')
+
+
+        
