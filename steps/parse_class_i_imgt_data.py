@@ -34,7 +34,7 @@ def generate_lists_for_locus(locus:str):
             allele_slug = None
             # increment the IMGT counter, only incrementing for class I sequences
             imgt_count += 1 
-            sequence_data = process_sequence(str(entry.seq), allele_info['locus'], pocket_residues)
+            sequence_data = process_sequence(str(entry.seq), pocket_residues)
             # we only want alleles with sequences long enough to include cytoplasmic domains
             if sequence_data['appropriate_length'] and sequence_data['cytoplasmic_sequence']: 
                 if len(sequence_data['cytoplasmic_sequence']) > 270:

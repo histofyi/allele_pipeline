@@ -127,6 +127,7 @@ class_i_starts = [
     "GSHYMRY",
     "GSHAMRY",
     "GSHYMRY",
+    "GSHSWRY"
 ]
 
 allele_name_modifiers = ['N','L','S','C','A','Q']
@@ -157,6 +158,23 @@ def parse_hla_description(description:str) -> Dict:
     return allele_info
 
 
+def parse_mhc_description(description:str) -> Dict:
+    description_elements = description.split(' ')
+    locus = description_elements[1].split('*')[0]
+    gene_allele_name = description_elements[1]
+    protein_allele_name = ':'.join(gene_allele_name.split(":")[0:2])
+    id = description_elements[0].split(':')[1]
+    allele_info = {
+        'protein_allele_name':protein_allele_name,
+        'gene_allele_name':gene_allele_name,
+        'locus': locus,
+        'id':id,
+        'source':'ipd-mhc'
+    }
+    return allele_info
+
+     
+
 def build_pocket_pseudosequence(sequence:str, pocket_residues:List) -> str:
     pseudosequence = ''
     for residue_id in pocket_residues:
@@ -165,7 +183,7 @@ def build_pocket_pseudosequence(sequence:str, pocket_residues:List) -> str:
     return pseudosequence
 
 
-def process_sequence(sequence:str, locus:str, pocket_residues:List) -> Dict:
+def process_sequence(sequence:str, pocket_residues:List) -> Dict:
     missing_start = None
     cytoplasmic_sequence = None
     gdomain_sequence = None
@@ -194,7 +212,8 @@ def process_sequence(sequence:str, locus:str, pocket_residues:List) -> Dict:
             cytoplasmic_sequence = f"-{cytoplasmic_sequence[:274]}"
         cytoplasmic_sequence = cytoplasmic_sequence[:275]
         gdomain_sequence = cytoplasmic_sequence[:182]
-        pocket_pseudosequence = build_pocket_pseudosequence(cytoplasmic_sequence, pocket_residues)
+        if pocket_residues:
+            pocket_pseudosequence = build_pocket_pseudosequence(cytoplasmic_sequence, pocket_residues)
     return {
             'cytoplasmic_sequence':cytoplasmic_sequence,
             'gdomain_sequence':gdomain_sequence,
