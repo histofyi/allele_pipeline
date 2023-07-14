@@ -3,6 +3,7 @@ from common.pipeline import load_config
 
 from fetch_ipd_data import fetch_ipd_data
 from parse_class_i_imgt_data import construct_class_i_hla_allele_lists
+from parse_class_i_mhc_data import construct_class_i_mhc_allele_lists
 
 from rich.console import Console
 console = Console()
@@ -42,5 +43,6 @@ for locus in hla_class_i:
 
     i+=1
 
+console.rule(title=f"4. Parsing IPD sequence set for non-human Class I")
 
-
+construct_class_i_mhc_allele_lists()
