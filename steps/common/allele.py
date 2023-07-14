@@ -158,6 +158,21 @@ def parse_hla_description(description:str) -> Dict:
     return allele_info
 
 
+def parse_h2_description(description:str) -> Dict:
+    protein_allele_name = description.split(' ')[1]
+    gene_allele_name = description.split(' ')[1]
+    locus = description.split(' ')[1].split('-')[1][0]
+    id = description.split(' ')[0].split(':')[1]
+    allele_info = {
+        'protein_allele_name':protein_allele_name,
+        'gene_allele_name':gene_allele_name,
+        'locus': locus,
+        'id':id,
+        'source':'h2'
+    }
+    return allele_info
+
+
 def parse_mhc_description(description:str) -> Dict:
     description_elements = description.split(' ')
     locus = description_elements[1].split('*')[0]
