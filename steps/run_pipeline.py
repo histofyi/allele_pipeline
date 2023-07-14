@@ -2,6 +2,7 @@
 from common.pipeline import load_config
 
 from fetch_ipd_data import fetch_ipd_data
+from fetch_h2_data import fetch_h2_data
 from parse_class_i_imgt_data import construct_class_i_hla_allele_lists
 from parse_class_i_mhc_data import construct_class_i_mhc_allele_lists
 
@@ -29,9 +30,9 @@ console.rule(title="1. Retrieving IPD sequence sets")
 
 fetch_ipd_data(config)
 
-console.rule(title="2. Retrieving mouse sequence sets - coming soon")
+console.rule(title="2. Retrieving mouse sequence sets")
 
-print ("")
+fetch_h2_data(config)
 
 hla_class_i = config['HLA_CLASS_I']
 
