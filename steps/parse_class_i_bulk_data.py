@@ -101,9 +101,8 @@ def generate_lists():
                 
         i += 1
 
-
-    print (f"Number of unmatched sequences to analyse: {len(unmatched)}")   
     print (f"MHC Class I sequences found: {mhc_class_i_count}")
+    print (f"Number of unmatched sequences to analyse: {len(unmatched)}")   
     
     return i, protein_alleles, cytoplasmic_sequences, gdomain_sequences, pocket_pseudosequences
 
@@ -129,7 +128,7 @@ def parse_sequence_dict(sequences:Dict) -> Dict:
     return sequences
 
 
-def construct_class_i_mhc_allele_lists():
+def construct_class_i_bulk_allele_lists(dataset_name:str):
     ipd_mhc_count, protein_alleles, cytoplasmic_sequences, gdomain_sequences, pocket_pseudosequences = generate_lists()
 
     # now we'll iterate through the alleles to find the canonical allele (the one with the lowest number)
@@ -196,7 +195,7 @@ def construct_class_i_mhc_allele_lists():
             json.dump(protein_alleles[locus_slug], json_file, sort_keys=True, indent=4)
 
 
-    print (f"Total sequences in IPD-MHC dataset: {ipd_mhc_count}")
+    print (f"Total sequences in {dataset_name} dataset: {ipd_mhc_count}")
     
     print (f"Number of species found: {len(cytoplasmic_sequences)}")
     print (f"Number of loci found: {len(protein_alleles)}")
