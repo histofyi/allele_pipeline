@@ -53,7 +53,9 @@ def generate_lists_for_locus(locus:str):
                             'sequences':[],
                             'alleles':[],
                             'canonical_allele':'',
-                            'canonical_sequence':''
+                            'canonical_sequence':'',
+                            'gdomain_sequence':sequence_data['gdomain_sequence'],
+                            'pocket_pseudosequence':sequence_data['pocket_pseudosequence']
                         }
                     # and append the specific allele information    
                     protein_alleles[allele_slug]['alleles'].append(allele_info)
@@ -137,6 +139,8 @@ def construct_class_i_hla_allele_lists(locus:str):
                     if len(sequence) > max_sequence_length:
                         max_sequence_length = len(sequence)
                         canonical_sequence = sequence
+            else:
+                canonical_sequence = protein_alleles[allele]['sequences'][0]
         else:
             canonical_allele = protein_alleles[allele]['alleles'][0]
             canonical_sequence = protein_alleles[allele]['sequences'][0]
@@ -152,6 +156,12 @@ def construct_class_i_hla_allele_lists(locus:str):
         sequence_list = parse_sequence_dict(eval(sequence_type))
         with open(filename, "w") as json_file:
             json.dump(sequence_list, json_file, sort_keys=True, indent=4)
+
+    directory_path = f"output/protein_alleles"
+    Path(directory_path).mkdir(parents=True, exist_ok=True)
+    filename = f"{directory_path}/hla_{locus.lower()}.json"
+    with open(filename, "w") as json_file:
+        json.dump(protein_alleles, json_file, sort_keys=True, indent=4)
     
     print ("")
     print (f"Total number of HLA-{locus} sequences: {imgt_count}")
