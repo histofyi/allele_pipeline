@@ -4,7 +4,6 @@ import datetime
 from typing import Dict
 from rich import print, rule
 
-import requests
 
 from common.pipeline import load_config
 
