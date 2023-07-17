@@ -139,8 +139,20 @@ def parse_sequence_dict(sequences:Dict, species_slug:str) -> Dict:
     return sequences
 
 
-def construct_class_i_locus_allele_lists(locus:str, species_slug:str, sequence_set:str, config:Dict, verbose=False):
+def construct_class_i_locus_allele_lists(locus:str, species_slug:str, sequence_set:str, config:Dict, verbose=False) -> Dict:
+    """
+    This function creates the data for a specific locus and saves it in a set of files in the output directory
 
+    Args:
+        locus (str): the locus to be processed in a dataset e.g. A for HLA-A
+        species_slug (str): the slugified version of the species stem for the sequences e.g. hla for HLA
+        sequence_set (str): the dataset to be processed e.g. IPD_IMGT_HLA_PROT for the HLA protein sequence dataset from IPD/IMGT
+        config (Dict): the configuration dictionary
+        verbose (bool): a boolean as to whether this step should output to the terminal
+
+    Returns:
+        Dict: the action dictionary for this step which will be stored in the pipeline log
+    """
     total_sequences, protein_alleles, cytoplasmic_sequences, gdomain_sequences, pocket_pseudosequences = generate_lists_for_locus(locus, species_slug, sequence_set, config, verbose)
 
     # now we'll iterate through the alleles to find the canonical allele (the one with the lowest number)
@@ -155,13 +167,17 @@ def construct_class_i_locus_allele_lists(locus:str, species_slug:str, sequence_s
             if len(protein_alleles[allele]['sequences']) > 1:
                 max_sequence_length = 0
                 canonical_sequence = ''
+                # now iterate through the sequences
                 for sequence in protein_alleles[allele]['sequences']:
+                    # find the longest sequence, and make it the canonical one
                     if len(sequence) > max_sequence_length:
                         max_sequence_length = len(sequence)
                         canonical_sequence = sequence
             else:
+                # or if there's no sequence variation, just make the first sequence in the array the canonical one
                 canonical_sequence = protein_alleles[allele]['sequences'][0]
         else:
+            # if there is only one allele, the only allele is the canonical one and canonical sequence
             protein_alleles[allele]['canonical_allele'] = protein_alleles[allele]['alleles'][0]
             canonical_sequence = protein_alleles[allele]['sequences'][0]
         protein_alleles[allele]['canonical_sequence'] = canonical_sequence
