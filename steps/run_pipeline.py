@@ -5,7 +5,7 @@ from fetch_ipd_data import fetch_ipd_data
 from fetch_h2_data import fetch_h2_data
 from parse_class_i_locus_data import construct_class_i_locus_allele_lists
 from parse_class_i_bulk_data import construct_class_i_bulk_allele_lists
-from create_folder_structure import create_output_folder_structure
+from create_folder_structure import create_folder_structure
 
 
 from rich.console import Console
@@ -15,7 +15,7 @@ from rich import print
 
 
 steps = [
-    create_output_folder_structure,
+    create_folder_structure,
     fetch_ipd_data,
     fetch_h2_data,
     construct_class_i_locus_allele_lists,
@@ -56,7 +56,7 @@ config = load_config()
 
 console.rule(title="1. Creating the folder structure in the output directory")
 
-create_output_folder_structure(config)
+create_folder_structure(config)
 
 console.rule(title="2. Retrieving IPD sequence sets")
 

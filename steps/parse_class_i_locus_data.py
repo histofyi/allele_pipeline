@@ -1,6 +1,6 @@
 from typing import Dict
 import json
-from pathlib import Path
+
 
 from common.allele import parse_hla_description, parse_h2_description, fasta_reader, process_sequence, allele_name_modifiers
 from common.helpers import slugify
@@ -203,7 +203,6 @@ def construct_class_i_locus_allele_lists(locus:str, species_slug:str, sequence_s
         # generate a directory path for each type of sequence
         directory_path = f"output/{sequence_type}"
         # create the directory path if it doesn't exist
-        Path(directory_path).mkdir(parents=True, exist_ok=True)
         # generate a filename for the specific file for the locus
         filename = f"{directory_path}/{species_slug}_{locus.lower()}.json"
         # parse the sequence dictionary to assign the canonical allele
@@ -214,7 +213,6 @@ def construct_class_i_locus_allele_lists(locus:str, species_slug:str, sequence_s
 
     # now generate a directory path 
     directory_path = f"output/protein_alleles"
-    Path(directory_path).mkdir(parents=True, exist_ok=True)
     filename = f"{directory_path}/{species_slug}_{locus.lower()}.json"
     with open(filename, "w") as json_file:
         json.dump(protein_alleles, json_file, sort_keys=True, indent=4)

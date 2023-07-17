@@ -1,6 +1,5 @@
 from typing import Dict
 import json
-from pathlib import Path
 
 from common.allele import parse_mhc_description, fasta_reader, process_sequence, allele_name_modifiers
 from common.helpers import slugify
@@ -177,7 +176,6 @@ def construct_class_i_bulk_allele_lists(dataset_name:str):
 
     for sequence_type in ['cytoplasmic_sequences', 'gdomain_sequences', 'pocket_pseudosequences']:
         directory_path = f"output/{sequence_type}"
-        Path(directory_path).mkdir(parents=True, exist_ok=True)
         sequences = eval(sequence_type)
         if sequences:
             for species in sequences:
@@ -188,7 +186,6 @@ def construct_class_i_bulk_allele_lists(dataset_name:str):
                         json.dump(sequence_list, json_file, sort_keys=True, indent=4)
     
     directory_path = f"output/protein_alleles"
-    Path(directory_path).mkdir(parents=True, exist_ok=True)
     for locus_slug in protein_alleles:
         filename = f"{directory_path}/{locus_slug}.json"
         with open(filename, "w") as json_file:
