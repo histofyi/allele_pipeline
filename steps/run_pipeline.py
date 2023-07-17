@@ -27,9 +27,10 @@ def step_number(step:str):
     return int(step) - 1
 
 def run_step(*args, **kwargs):
-    step_number = args[0]
+    step = step_number(args[0])
     args = args[1:]
-    print (step_number)
+    log_data = steps[step](*args, **kwargs)
+    print (log_data)
     print (args)
     print (kwargs)
     pass
