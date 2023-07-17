@@ -29,11 +29,11 @@ def generate_lists_for_locus(locus:str, species_slug, sequence_set:str, config:D
         sequence_set (str): the name of the sequence set, this is used to determine the file name e.g. IPD_IMGT_HLA_PROT which results in the filename tmp/ipd_imgt_hla_prot.fasta
         verbose (bool): whether specific information is output to the terminal, for large sequence sets this can be overwhelming and significantly slow down the function
     Returns:
-        int: 
-        Dict:
-        Dict:
-        Dict: 
-        Dict:
+        int: the number of class I sequences within a specific locus in the dataset
+        Dict: the dictionary of protein alleles 
+        Dict: the dictionary of cytoplasmic sequences
+        Dict: the dictionary of g-domain sequences
+        Dict: the dictionary of pocket pseudosequences (same as NetMHCPan pseudosequences)
     """
     filename = f"tmp/{sequence_set.lower()}.fasta"
 
