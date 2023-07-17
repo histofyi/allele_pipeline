@@ -6,8 +6,6 @@ from pathlib import Path
 from rich.console import Console
 console = Console()
 
-from rich import print
-
 
 def create_folder(folder_path:str, verbose:bool) -> str:
     """
@@ -29,17 +27,17 @@ def create_folder(folder_path:str, verbose:bool) -> str:
         Path(folder_path).mkdir(parents=True, exist_ok=True)
         # if verbose is set to True, send a message to the terminal
         if verbose:  
-            print (f"{folder_path} created")  
+            console.print (f"{folder_path} created")  
     else:
         # if it does exist, set folder_status to `folders_in_existence`
         folder_status = 'folders_in_existence'
         # if verbose is set to True, send a message to the terminal
         if verbose:
-            print (f"{folder_path} already exists")  
+            console.print (f"{folder_path} already exists")  
     return folder_status
 
 
-def create_folder_structure(config:Dict, verbose:bool=False) -> Dict:
+def create_folder_structure(config, verbose:bool=False) -> Dict:
     """
     This function creates the folder structure for the outputs of the pipeline
 
@@ -60,19 +58,21 @@ def create_folder_structure(config:Dict, verbose:bool=False) -> Dict:
     # default log file
     action_log = {
         'folders_created':[],
-        'folders_in_existence':[]
+        'folders_in_existence':[], 
+        'completed_at': None
     }
 
-    # iterate through the folders
+    # iterate through the folders in the list
     for folder in folders:
         folder_path = f"{config['OUTPUT_PATH']}/{folder}"
         folder_status = create_folder(folder_path, verbose)
         action_log[folder_status].append(folder)
 
-
+    # create the local logfile folder
     folder_status = create_folder(config['LOG_PATH'], verbose)
     action_log[folder_status].append('log')
 
+    # create the local tmp folder
     folder_status = create_folder(config['TMP_PATH'], verbose)
     action_log[folder_status].append('tmp')
 

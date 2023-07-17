@@ -4,6 +4,7 @@ import json
 
 from common.allele import parse_hla_description, parse_h2_description, fasta_reader, process_sequence, find_canonical_allele, allele_name_modifiers
 from common.helpers import slugify
+from common.pipeline import generate_completed_at_entry
 
 from rich import print
 
@@ -90,30 +91,23 @@ def generate_lists_for_locus(locus:str, species_slug, sequence_set:str, config:D
                         protein_alleles[allele_slug]['sequences'].append(sequence_data['cytoplasmic_sequence'])
                     
                     # now add the unique sequences to the different sequence dictionaries
-                    # first up the cytoplasmic sequence dict 
-                    if sequence_data['cytoplasmic_sequence'] not in cytoplasmic_sequences:
-                        cytoplasmic_sequences[sequence_data['cytoplasmic_sequence']] = {
-                            'alleles':[],
-                            'canonical_allele':{}
-                        }
-                    cytoplasmic_sequences[sequence_data['cytoplasmic_sequence']]['alleles'].append(allele_info)
-                    
-                    # next the gdomain dict
-                    if sequence_data['gdomain_sequence'] not in gdomain_sequences:
-                        gdomain_sequences[sequence_data['gdomain_sequence']] = {
-                            'alleles':[],
-                            'canonical_allele':{}
-                        }
-                    gdomain_sequences[sequence_data['gdomain_sequence']]['alleles'].append(allele_info)
-                    
-                    # finally the pocket pseudosequence dict (like NetMHCPan)
-                    if sequence_data['pocket_pseudosequence'] not in pocket_pseudosequences:
-                        pocket_pseudosequences[sequence_data['pocket_pseudosequence']] = {
-                            'alleles':[],
-                            'canonical_allele':{}
-                        }
-                    pocket_pseudosequences[sequence_data['pocket_pseudosequence']]['alleles'].append(allele_info)
-    
+                    # TODO this looks optimisable
+
+                    for sequence_type in config['SEQUENCE_TYPES']:
+                        
+                        this_sequence_type = eval(sequence_type)
+                        # sequence types in the config are plural, in the protein_allele dictionary they're singular
+                        sequence_type = sequence_type[:-1]
+
+                        # if the sequence is not in the specific sequence type dictionary then we need to create an entry
+                        if sequence_data[sequence_type] not in this_sequence_type:
+                            this_sequence_type[sequence_data[sequence_type]] = {
+                                'alleles':[],
+                                'canonical_allele':{}
+                            }
+                        # and then append the allele info to the alleles list for the sequence
+                        this_sequence_type[sequence_data[sequence_type]]['alleles'].append(allele_info)
+
     return total_sequences, protein_alleles, cytoplasmic_sequences, gdomain_sequences, pocket_pseudosequences
 
 
@@ -139,7 +133,7 @@ def parse_sequence_dict(sequences:Dict, species_slug:str) -> Dict:
     return sequences
 
 
-def construct_class_i_locus_allele_lists(locus:str, species_slug:str, sequence_set:str, config:Dict, verbose=False) -> Dict:
+def construct_class_i_locus_allele_lists(config:Dict, **kwargs) -> Dict:
     """
     This function creates the data for a specific locus and saves it in a set of files in the output directory
 
@@ -153,6 +147,15 @@ def construct_class_i_locus_allele_lists(locus:str, species_slug:str, sequence_s
     Returns:
         Dict: the action dictionary for this step which will be stored in the pipeline log
     """
+    
+    locus = kwargs['locus']
+    species_slug = kwargs['species_slug']
+    sequence_set = kwargs['sequence_set']
+    if 'verbose' in kwargs:
+        verbose = kwargs['verbose']
+    else:
+        verbose = False
+
     total_sequences, protein_alleles, cytoplasmic_sequences, gdomain_sequences, pocket_pseudosequences = generate_lists_for_locus(locus, species_slug, sequence_set, config, verbose)
 
     # now we'll iterate through the alleles to find the canonical allele (the one with the lowest number)
@@ -216,10 +219,8 @@ def construct_class_i_locus_allele_lists(locus:str, species_slug:str, sequence_s
         print (f"Total number of unique g-domain sequences: {len(gdomain_sequences)}")
         print (f"Total number of unique pocket pseudosequences: {len(pocket_pseudosequences)}")
         print (f"")
-    else:
-        print ("Completed")
     
-    return {
+    action_log = {
         'locus': f"{species_slug.upper()}-{locus}",
         'sequences_processed': total_sequences,
         'alleles_found': len(protein_alleles),
@@ -228,3 +229,4 @@ def construct_class_i_locus_allele_lists(locus:str, species_slug:str, sequence_s
         'unique_pocket_pseudosequences': len(pocket_pseudosequences)
     }
 
+    return action_log

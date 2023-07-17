@@ -1,10 +1,9 @@
 
-from common.pipeline import load_config
+from common.pipeline import load_config, Pipeline, run_step
 
-from fetch_ipd_data import fetch_ipd_data
-from fetch_h2_data import fetch_h2_data
 from parse_class_i_locus_data import construct_class_i_locus_allele_lists
 from parse_class_i_bulk_data import construct_class_i_bulk_allele_lists
+from fetch_raw_data import fetch_raw_datasets
 from create_folder_structure import create_folder_structure
 
 
@@ -13,70 +12,56 @@ console = Console()
 
 from rich import print
 
+import git
 
-steps = [
-    create_folder_structure,
-    fetch_ipd_data,
-    fetch_h2_data,
-    construct_class_i_locus_allele_lists,
-    construct_class_i_bulk_allele_lists,
-    construct_class_i_locus_allele_lists
-]
+steps = {
+    '1':{
+        'function':create_folder_structure,
+        'title_template':'Creating the folder structure in the output directory',
+        'list_item':'Creating the folder structure in the output directory'
+    },
+    '2':{
+        'function':fetch_raw_datasets,
+        'title_template':'Downloading latest versions of the IPD and H2 sequence datasets',
+        'list_item':'Downloading latest versions of the IPD and H2 sequence datasets'
+    },
+    '3':{
+        'function':construct_class_i_locus_allele_lists,
+        'title_template':'{substep}. Parsing IPD sequence set for HLA-{locus}',
+        'list_item':'Parsing the human Class I sequences from IPD'
+    },
+    '4':{
+        'function':construct_class_i_bulk_allele_lists,
+        'title_template':'Parsing IPD sequence set for non-human Class I',
+        'list_item':'Parsing the non-human Class I sequences from IPD'
+    },
+    '5':{
+        'function':construct_class_i_locus_allele_lists,
+        'title_template':'',
+        'list_item':'{substep}. Parsing H2 sequence set for H2-{locus}'
+    }
+}
 
-def step_number(step:str):
-    return int(step) - 1
-
-def run_step(*args, **kwargs):
-    step = step_number(args[0])
-    args = args[1:]
-    log_data = steps[step](*args, **kwargs)
-    print (log_data)
-    print (args)
-    print (kwargs)
-    pass
 
 
 
-action_log = {}
 
-print ("")
-console.rule(title="Running Allele Pipeline")
-print ("")
+pipeline = Pipeline(steps, console, logoutput=True)
 
-console.print(f"There are {len(steps)} steps to this pipeline")
-console.print("1. Creating the folder structure in the output directory")
-console.print("2. Downloading latest versions of the IPD sequence sets (for human and most non-human species)")
-console.print("3. Downloading latest versions of the mouse sequence sets")
-console.print("4. Parsing the human Class I sequences from IPD")
-console.print("5. Parsing the non-human Class I sequences from IPD")
-console.print("6. Parsing the mouse Class I sequences")
-
-print ("")
 config = load_config()
 
-console.rule(title="1. Creating the folder structure in the output directory")
+pipeline.run_step('1')
 
-create_folder_structure(config)
-
-console.rule(title="2. Retrieving IPD sequence sets")
-
-fetch_ipd_data(config)
-
-console.rule(title="3. Retrieving mouse sequence sets")
-
-fetch_h2_data(config)
+pipeline.run_step('2')
 
 hla_class_i = config['HLA_CLASS_I']
 
 i = 1
 for locus in hla_class_i:
-    console.rule(title=f"4.{i}. Parsing IPD sequence set for HLA-{locus}")
-
-    construct_class_i_locus_allele_lists(locus, 'hla', 'IPD_IMGT_HLA_PROT', config)
-
+    pipeline.run_step('3', substep=i, locus=locus, species_slug='hla', sequence_set='IPD_IMGT_HLA_PROT')
     i+=1
 
-console.rule(title=f"5. Parsing IPD sequence set for non-human Class I")
+console.rule(title=f"4. ")
 
 construct_class_i_bulk_allele_lists('IPD-MHC')
 
@@ -84,11 +69,8 @@ h2_class_i = config['H2_CLASS_I']
 
 j = 1
 for locus in h2_class_i:
-    console.rule(title=f"6.{j}. Parsing custom sequence set for H2-{locus}")
-
-    construct_class_i_locus_allele_lists(locus, 'h2', 'H2_CLASS_I_PROT', config)
-
+    pipeline.run_step('5', substep=j, locus=locus, species_slug='h2', sequence_set='H2_CLASS_I_PROT')
     j+=1
 
-run_step("1",config,verbose=True)
+
 

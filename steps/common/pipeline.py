@@ -1,5 +1,6 @@
 from typing import Dict, Optional
 import toml
+import git
 
 import datetime
 from rich import print
@@ -48,6 +49,83 @@ def write_lockfile(filename:str, text:str):
     pass
 
 
+def get_current_time() -> str:
+    return datetime.datetime.now().isoformat()
+
+
+
+class Pipeline():
+    def __init__(self, steps:Dict, console, verbose:bool=False, logoutput:bool=False, devmode:bool=True):
+        repo = git.Repo(search_parent_directories=True)
+        started_at = get_current_time()
+        repository_name = repo.remotes.origin.url.split('.git')[0].split('/')[-1]
+        pipeline_version = repo.head.object.hexsha
+        pipeline_name = repository_name.replace('_',' ').capitalize()
+        self.steps = steps
+        self.config = load_config()
+        self.action_logs = {
+            'started_at': started_at,
+            'steps':{},
+            'repository_name': repository_name,
+            'pipeline_name': pipeline_name,
+            'pipeline_version': pipeline_version
+        }
+        self.console = console
+        self.console.print ("")
+        self.console.rule(title="Initialising...")
+        self.console.print ("")
+        self.console.print (f"{pipeline_name} (commit sha : {pipeline_version}) started at {started_at}")
+        self.console.print ("")
+        self.console.rule(title=f"Running {pipeline_name}")
+        self.console.print ("")
+        self.console.print(f"There are {len(self.steps)} steps to this pipeline")
+        for step in steps:
+            self.console.print(f"{step}. {self.steps[step]['list_item']}")
+        self.console.print("")
+        self.logoutput = logoutput
+
+
+    def run_step(self, step_number, **kwargs):
+        
+        if 'substep' in kwargs:
+            step_title_number = f"{step_number}.{kwargs['substep']}"
+            substep = kwargs['substep']
+        else:
+            step_title_number = str(step_number)
+            substep = None
+        
+        self.console.rule(title=f"{step_title_number}. {self.steps[step_number]['title_template'].format(**kwargs)}")
+        
+        started_at = get_current_time()
+
+        _action_log = self.steps[step_number]['function'](self.config, **kwargs)
+
+        if 'verbose' in kwargs:
+            del kwargs['verbose']
+        
+        if 'substep' in kwargs:
+            del kwargs['substep']
+
+        completed_at = get_current_time()
+        print (f"Completed at {completed_at}")
+
+        self.action_logs['steps'][step_title_number] = {
+            'step': step_number,
+            'substep': substep,
+            'step_action': self.steps[step_number]['function'].__name__,
+            'started_at':started_at,
+            'completed_at': completed_at,
+            'arguments': kwargs,
+            'action_log': _action_log
+        }
+
+        if self.logoutput:
+            self.console.print(self.action_logs['steps'][step_title_number])
+        pass
+
+
+
+
 def generate_completed_at_entry(action_log:Dict) -> Dict:
     # generate the completed at variable
     completed_at = datetime.datetime.now().isoformat()
@@ -58,3 +136,16 @@ def generate_completed_at_entry(action_log:Dict) -> Dict:
     print (f"Completed at {completed_at}")
 
     return action_log
+
+
+def run_step(*args, **kwargs):
+    step = args[0]
+    args = args[1:]
+    action_log = steps[step]['function'](*args, **kwargs)
+
+    print (action_log)
+    print (args)
+    print (kwargs)
+    # generate_completed_at_entry
+    pass
+
