@@ -160,6 +160,8 @@ def construct_class_i_locus_allele_lists(locus:str, species_slug:str, sequence_s
         allele_count = len(protein_alleles[allele]['alleles'])
         canonical_sequence = None
         canonical_allele = None
+
+        # if there's more than one sequence and the species is not one with non-standard nomenclature, look for the canonical allele and sequence
         if allele_count > 1 and species_slug not in non_standard_nomenclature_species:
             protein_alleles[allele] = find_canonical_allele(protein_alleles[allele])
 
