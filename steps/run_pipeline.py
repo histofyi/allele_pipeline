@@ -72,7 +72,7 @@ i = 1
 for locus in hla_class_i:
     console.rule(title=f"4.{i}. Parsing IPD sequence set for HLA-{locus}")
 
-    construct_class_i_locus_allele_lists(locus, 'hla', 'IPD_IMGT_HLA_PROT')
+    construct_class_i_locus_allele_lists(locus, 'hla', 'IPD_IMGT_HLA_PROT', config)
 
     i+=1
 
@@ -86,7 +86,7 @@ j = 1
 for locus in h2_class_i:
     console.rule(title=f"6.{j}. Parsing custom sequence set for H2-{locus}")
 
-    construct_class_i_locus_allele_lists(locus, 'h2', 'H2_CLASS_I_PROT')
+    construct_class_i_locus_allele_lists(locus, 'h2', 'H2_CLASS_I_PROT', config)
 
     j+=1
 
