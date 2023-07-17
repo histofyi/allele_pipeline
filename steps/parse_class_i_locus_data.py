@@ -144,6 +144,7 @@ def construct_class_i_locus_allele_lists(locus:str, species_slug:str, sequence_s
         canonical_allele = None
         if allele_count > 1 and species_slug not in non_standard_nomenclature_species:
             protein_alleles[allele] = find_canonical_allele(protein_alleles[allele])
+
             # there may be many different length variants of the sequence, we just want the longest one to be the canonical one for matching
             if len(protein_alleles[allele]['sequences']) > 1:
                 max_sequence_length = 0
