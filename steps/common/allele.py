@@ -189,7 +189,27 @@ def parse_mhc_description(description:str) -> Dict:
     return allele_info
 
      
+def find_canonical_allele(allele_set:Dict):
+    # set min to be far higher initially than the numerical representation of the allele number
+    min = 10000000000  
+    for this_allele in allele_set['alleles']:
+        allele_number = this_allele['gene_allele_name'].split('*')[1]
+        # check if the allele number contains a modifier which relates to expression level or soluble isoform
+        #TODO think about whether we should just bin these from ever being considered for canonicity
+        if allele_number[-1] in allele_name_modifiers:
+            allele_number = allele_number[:-1]
+        while allele_number.count(':') < 3:
+            allele_number += ':01'
+        # some allele numbers include letters, we need to ignore these
+        if allele_number.replace(':','').isnumeric():
+            # then cast to an int
+            allele_number_numeric = int(allele_number.replace(':',''))
+            if allele_number_numeric < min:
+                min = allele_number_numeric
+                allele_set['canonical_allele'] = this_allele
+    return allele_set
 
+    
 def build_pocket_pseudosequence(sequence:str, pocket_residues:List) -> str:
     pseudosequence = ''
     for residue_id in pocket_residues:

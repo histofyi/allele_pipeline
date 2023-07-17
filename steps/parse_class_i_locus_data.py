@@ -2,7 +2,7 @@ from typing import Dict
 import json
 
 
-from common.allele import parse_hla_description, parse_h2_description, fasta_reader, process_sequence, allele_name_modifiers
+from common.allele import parse_hla_description, parse_h2_description, fasta_reader, process_sequence, find_canonical_allele, allele_name_modifiers
 from common.helpers import slugify
 
 from rich import print
@@ -115,27 +115,6 @@ def generate_lists_for_locus(locus:str, species_slug, sequence_set:str, verbose:
     return imgt_count, protein_alleles, cytoplasmic_sequences, gdomain_sequences, pocket_pseudosequences
 
 
-def find_canonical_allele(allele_set:Dict):
-    # set min to be far higher initially than the numerical representation of the allele number
-    min = 10000000000  
-    for this_allele in allele_set['alleles']:
-        allele_number = this_allele['gene_allele_name'].split('*')[1]
-        # check if the allele number contains a modifier which relates to expression level or soluble isoform
-        #TODO think about whether we should just bin these from ever being considered for canonicity
-        if allele_number[-1] in allele_name_modifiers:
-            allele_number = allele_number[:-1]
-        while allele_number.count(':') < 3:
-            allele_number += ':01'
-        # some allele numbers include letters, we need to ignore these
-        if allele_number.replace(':','').isnumeric():
-            # then cast to an int
-            allele_number_numeric = int(allele_number.replace(':',''))
-            if allele_number_numeric < min:
-                min = allele_number_numeric
-                allele_set['canonical_allele'] = this_allele
-    return allele_set
-
-
 def parse_sequence_dict(sequences:Dict, species_slug:str) -> Dict:
     """
     This function takes a dictionary of processed sequences (for example gdomain sequences) and finds the canonical allele, assuming that is the one with the lowest allele number
@@ -164,23 +143,7 @@ def construct_class_i_locus_allele_lists(locus:str, species_slug:str, sequence_s
         canonical_sequence = None
         canonical_allele = None
         if allele_count > 1 and species_slug not in non_standard_nomenclature_species:
-            min = 10000000000
-            for this_allele in protein_alleles[allele]['alleles']:
-                # first of all we'll split the gene name into what will become a string representation of the number
-                allele_number = this_allele['gene_allele_name'].split('*')[1]
-                # if there is a modifier on the end of the gene name, we'll remove it so we can cast to an int
-                if allele_number[-1] in allele_name_modifiers:
-                    allele_number = allele_number[:-1]
-                # full length gene allele names have four components (three : ) so we'll pad any that are shorter
-                while allele_number.count(':') < 3:
-                    allele_number += ':01'
-                # then cast to an int
-                allele_number_numeric = int(allele_number.replace(':',''))
-                # find the lowest numberic allele number
-                if allele_number_numeric < min:
-                    min = allele_number_numeric
-                    canonical_allele = this_allele
-
+            protein_alleles[allele] = find_canonical_allele(protein_alleles[allele])
             # there may be many different length variants of the sequence, we just want the longest one to be the canonical one for matching
             if len(protein_alleles[allele]['sequences']) > 1:
                 max_sequence_length = 0
@@ -192,9 +155,8 @@ def construct_class_i_locus_allele_lists(locus:str, species_slug:str, sequence_s
             else:
                 canonical_sequence = protein_alleles[allele]['sequences'][0]
         else:
-            canonical_allele = protein_alleles[allele]['alleles'][0]
+            protein_alleles[allele]['canonical_allele'] = protein_alleles[allele]['alleles'][0]
             canonical_sequence = protein_alleles[allele]['sequences'][0]
-        protein_alleles[allele]['canonical_allele'] = canonical_allele
         protein_alleles[allele]['canonical_sequence'] = canonical_sequence
 
 
