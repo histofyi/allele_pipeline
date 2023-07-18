@@ -8,6 +8,7 @@ from fetch_raw_data import fetch_raw_datasets
 from create_folder_structure import create_folder_structure
 
 from rich.console import Console
+import argparse
 
 def run_pipeline(verbose:bool=False, force:bool=False, logoutput:bool=True) -> Dict:
     steps = {
@@ -38,7 +39,7 @@ def run_pipeline(verbose:bool=False, force:bool=False, logoutput:bool=True) -> D
         }
     }
 
-    pipeline = Pipeline(steps, Console(), logoutput)
+    pipeline = Pipeline(steps, Console(), logoutput=True, verbose=False)
 
     pipeline.run_step('1')
 
@@ -64,9 +65,37 @@ def run_pipeline(verbose:bool=False, force:bool=False, logoutput:bool=True) -> D
 
 
 def main():
+    parser = argparse.ArgumentParser(prog='Allele Pipeline',
+                    description='This pipeline builds a dataset of sequences, pseudosequences and canonical alleles.',
+                    epilog='For more information see - https://github.com/histofyi/allele_pipeline')
+    parser.add_argument('-v','--verbose', help='increases output verbosity (non-verbosity is the default)', action='store_true')
+    parser.add_argument('-f', '--force', help='forces reloading of underlying datasets (not forcing reload is the default)', action='store_true')
+    parser.add_argument('-p', '--production', help='switch between development and production modes (development mode is the default)', action='store_true')
+    args = parser.parse_args() 
+
+    if args.verbose:
+        verbose = True
+    else:
+        verbose = False
+    if args.force:
+        force = True
+    else:
+        force = False
+    if args.production:
+        mode = 'production' 
+    else:
+        mode = 'development'    
+
+    print (args)
+
+    print (verbose)
+    print (force)
+    print (mode)
     output = run_pipeline()
 
-main()
+
+if __name__ == '__main__':
+    main()
 
 
 
