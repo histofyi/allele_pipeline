@@ -132,7 +132,6 @@ dmypy.json
 .DS_Store
 
 #Config
-config.toml
 paths.toml
 secrets.toml
 
