@@ -60,7 +60,6 @@ def get_current_time() -> str:
     return datetime.datetime.now().isoformat()
 
 
-
 class Pipeline():
     def __init__(self, steps:Dict, console, verbose:bool=False, logoutput:bool=False, devmode:bool=True):
         repo = git.Repo(search_parent_directories=True)
