@@ -27,7 +27,7 @@ steps = {
     },
     '3':{
         'function':construct_class_i_locus_allele_lists,
-        'title_template':'{substep}. Parsing IPD sequence set for HLA-{locus}',
+        'title_template':'Parsing IPD sequence set for HLA-{locus}',
         'list_item':'Parsing the human Class I sequences from IPD'
     },
     '4':{
@@ -37,8 +37,8 @@ steps = {
     },
     '5':{
         'function':construct_class_i_locus_allele_lists,
-        'title_template':'',
-        'list_item':'{substep}. Parsing H2 sequence set for H2-{locus}'
+        'title_template':'Parsing H2 sequence set for H2-{locus}',
+        'list_item':'Parsing the mouse Class I sequences from a custom dataset'
     }
 }
 
