@@ -60,8 +60,10 @@ def run_pipeline(verbose:bool=False, force:bool=False, logoutput:bool=True) -> D
     for locus in h2_class_i:
         pipeline.run_step('5', substep=j, locus=locus, species_slug='h2', sequence_set='H2_CLASS_I_PROT')
         j+=1
+
+    action_logs = pipeline.finalise()
     
-    return {}
+    return action_logs
 
 
 def main():
@@ -70,7 +72,7 @@ def main():
                     epilog='For more information see - https://github.com/histofyi/allele_pipeline')
     parser.add_argument('-v','--verbose', help='increases output verbosity (non-verbosity is the default)', action='store_true')
     parser.add_argument('-f', '--force', help='forces reloading of underlying datasets (not forcing reload is the default)', action='store_true')
-    parser.add_argument('-p', '--production', help='switch between development and production modes (development mode is the default)', action='store_true')
+    parser.add_argument('-r', '--release', help='switch between development and release modes (development mode is the default)', action='store_true')
     args = parser.parse_args() 
 
     if args.verbose:
@@ -81,8 +83,8 @@ def main():
         force = True
     else:
         force = False
-    if args.production:
-        mode = 'production' 
+    if args.release:
+        mode = 'release' 
     else:
         mode = 'development'    
 
