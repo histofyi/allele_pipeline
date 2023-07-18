@@ -1,4 +1,4 @@
-from typing import Dict
+from typing import Dict, List, Union
 import json
 
 from common.allele import parse_mhc_description, fasta_reader, process_sequence, find_canonical_allele, allele_name_modifiers
@@ -6,19 +6,30 @@ from common.helpers import slugify
 
 from rich import print
 
-filename = f'tmp/ipd_mhc_prot.fasta'
 
-
-entries = []
-truncated = []
-
-
+# TODO handle non-IMGT conforming sequences better at the moment this is set to None so that incorrect pocket pseuedosequences aren't generated
 pocket_residues = None
 
 
+def generate_lists(sequence_set:str, verbose:bool=True) -> Union[Dict, Dict, Dict, Dict, Dict, List]:
+    """
+    This function takes a dataset and generate an allele list and associated sequence lists for all Class I loci contained within it.
 
-def generate_lists():
-    i = 0
+    Args:
+        sequence_set (str): the name of the sequence set, this is used to determine the file name e.g. IPD_MHC_PROT which results in the filename tmp/ipd_mhc_prot.fasta
+        verbose (bool): whether specific information is output to the terminal, for large sequence sets this can be overwhelming and significantly slow down the function
+    Returns:
+        Dict: the dictionary of protein alleles 
+        Dict: the dictionary of cytoplasmic sequences
+        Dict: the dictionary of g-domain sequences
+        Dict: the dictionary of pocket pseudosequences (same as NetMHCPan pseudosequences), in this case empty until we can generate them reliably for non-IMGT numbering compliant sequences
+        Dict: the dictionary of basic statistics
+        List: an array of unmatched alleles
+    """
+    # this variable stores a simple counter of all sequences in the dataset
+    all_sequences_count = 0
+    
+    filename = f"tmp/{sequence_set.lower()}.fasta"
 
     unmatched = []
 
@@ -33,7 +44,6 @@ def generate_lists():
         
         # first of all exclude any sequences whose locus is that of classical Class II, this won't catch all species, but will do for primates
         if not allele_info['locus'].split('-')[1][0:3] in ['DPA','DPB','DQA','DQB','DRA','DRB']:
-            
             
             allele_slug = None
             locus_slug = None
@@ -96,14 +106,15 @@ def generate_lists():
                     }
                 gdomain_sequences[species_slug][locus_slug][sequence_data['gdomain_sequence']]['alleles'].append(allele_info)
             else:
-                unmatched.append(allele_info['locus'])
+                unmatched.append(allele_info['protein_allele_name'])
                 
-        i += 1
-
-    print (f"MHC Class I sequences found: {mhc_class_i_count}")
-    print (f"Number of unmatched sequences to analyse: {len(unmatched)}")   
-    
-    return i, protein_alleles, cytoplasmic_sequences, gdomain_sequences, pocket_pseudosequences
+        all_sequences_count += 1
+    stats = {
+        'all_sequences_count':all_sequences_count,
+        'all_class_i_allele_sequences_count':mhc_class_i_count,
+        'unmatched_count': len(unmatched)
+    }
+    return protein_alleles, cytoplasmic_sequences, gdomain_sequences, pocket_pseudosequences, stats, unmatched
 
 
 def parse_sequence_dict(sequences:Dict) -> Dict:
@@ -112,15 +123,29 @@ def parse_sequence_dict(sequences:Dict) -> Dict:
     return sequences
 
 
-def construct_class_i_bulk_allele_lists(dataset_name:str):
-    ipd_mhc_count, protein_alleles, cytoplasmic_sequences, gdomain_sequences, pocket_pseudosequences = generate_lists()
+def construct_class_i_bulk_allele_lists(config:Dict, **kwargs):
+    """
+    This function creates the data for a specific locus and saves it in a set of files in the output directory
 
+    Args:
+        config (Dict): the configuration dictionary
+        sequence_set (str): the dataset to be processed e.g. IPD_IMGT_HLA_PROT for the HLA protein sequence dataset from IPD/IMGT
+        verbose (bool): a boolean as to whether this step should output to the terminal
+
+    Returns:
+        Dict: the action dictionary for this step which will be stored in the pipeline log
+    """
+    sequence_set = kwargs['sequence_set']
+    
+    protein_alleles, cytoplasmic_sequences, gdomain_sequences, pocket_pseudosequences, stats, unmatched = generate_lists(sequence_set)
+
+    all_allele_count = 0
     # now we'll iterate through the alleles to find the canonical allele (the one with the lowest number)
     for locus_slug in protein_alleles:
         for allele in protein_alleles[locus_slug]:
+            all_allele_count +=1
             allele_count = len(protein_alleles[locus_slug][allele]['alleles'])
             canonical_sequence = None
-            canonical_allele = None
             if allele_count > 1:
                 protein_alleles[locus_slug][allele] = find_canonical_allele(protein_alleles[locus_slug][allele])
                 
@@ -157,11 +182,12 @@ def construct_class_i_bulk_allele_lists(dataset_name:str):
         with open(filename, "w") as json_file:
             json.dump(protein_alleles[locus_slug], json_file, sort_keys=True, indent=4)
 
+    action_log = {k:v for k,v in stats.items()}
 
-    print (f"Total sequences in {dataset_name} dataset: {ipd_mhc_count}")
+    action_log['species_found'] = len(cytoplasmic_sequences)
+    action_log['loci_found'] = len(protein_alleles)
+    action_log['unique_class_i_alleles_found'] = all_allele_count
     
-    print (f"Number of species found: {len(cytoplasmic_sequences)}")
-    print (f"Number of loci found: {len(protein_alleles)}")
-    
+    return action_log
 
 
