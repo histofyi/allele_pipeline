@@ -138,3 +138,4 @@ secrets.toml
 #tmp
 tmp/*
 output/*
+log/*
