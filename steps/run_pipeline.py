@@ -1,5 +1,5 @@
 
-from common.pipeline import load_config, Pipeline, run_step
+from common.pipeline import load_config, Pipeline
 
 from parse_class_i_locus_data import construct_class_i_locus_allele_lists
 from parse_class_i_bulk_data import construct_class_i_bulk_allele_lists
@@ -54,7 +54,7 @@ pipeline.run_step('1')
 
 pipeline.run_step('2')
 
-hla_class_i = config['HLA_CLASS_I']
+hla_class_i = pipeline.get_config_item('HLA_CLASS_I')
 
 i = 1
 for locus in hla_class_i:
@@ -65,7 +65,7 @@ console.rule(title=f"4. ")
 
 construct_class_i_bulk_allele_lists('IPD-MHC')
 
-h2_class_i = config['H2_CLASS_I']
+h2_class_i = pipeline.get_config_item('H2_CLASS_I')
 
 j = 1
 for locus in h2_class_i:

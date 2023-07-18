@@ -1,4 +1,4 @@
-from typing import Dict, Optional
+from typing import Dict, List, Optional, Union
 import toml
 import git
 
@@ -130,29 +130,8 @@ class Pipeline():
             self.console.print(self.action_logs['steps'][step_title_number])
         pass
 
-
-
-
-def generate_completed_at_entry(action_log:Dict) -> Dict:
-    # generate the completed at variable
-    completed_at = datetime.datetime.now().isoformat()
-
-    action_log['completed_at'] = completed_at
-
-    # output completed at message to terminal
-    print (f"Completed at {completed_at}")
-
-    return action_log
-
-
-def run_step(*args, **kwargs):
-    step = args[0]
-    args = args[1:]
-    action_log = steps[step]['function'](*args, **kwargs)
-
-    print (action_log)
-    print (args)
-    print (kwargs)
-    # generate_completed_at_entry
-    pass
-
+    def get_config_item(self, key:str) -> Union[None, str, int, List]:
+        if key in self.config:
+            return self.config[key]
+        else: 
+            return None
