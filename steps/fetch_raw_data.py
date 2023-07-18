@@ -13,7 +13,6 @@ from common.pipeline import get_current_time
 def fetch_raw_datasets(config:Dict, force:bool=False, verbose:bool=False):
 
     action_log = {}
-    console.print("")
     for datasource in ['IPD_IMGT_HLA_PROT','IPD_MHC_PROT', 'H2_CLASS_I_PROT']:
         
         filepath = f'{config["TMP_PATH"]}/{datasource.lower()}.fasta'
