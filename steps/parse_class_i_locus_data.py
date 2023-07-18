@@ -1,16 +1,11 @@
 from typing import Dict, Union
 import json
 
-
 from common.allele import parse_hla_description, parse_h2_description, fasta_reader, process_sequence, find_canonical_allele, allele_name_modifiers
 from common.helpers import slugify
 
 from rich import print
 
-
-
-entries = []
-truncated = []
 
 species_functions = {
     'hla': parse_hla_description,
