@@ -5,7 +5,7 @@ import git
 import datetime
 from rich import print
 
-def load_config() -> Dict:
+def load_config(verbose:str=False) -> Dict:
     """ 
     Loads the configuration file for the pipline and returns a dictionary of values
 
@@ -19,7 +19,8 @@ def load_config() -> Dict:
         this_config = toml.load(f"{files[file]}")
         for k,v in this_config.items():
             config[k] = v
-    print (config)
+    if verbose:
+        print (config)
     return config
 
 
@@ -68,7 +69,7 @@ class Pipeline():
         pipeline_version = repo.head.object.hexsha
         pipeline_name = repository_name.replace('_',' ').capitalize()
         self.steps = steps
-        self.config = load_config()
+        self.config = load_config(verbose)
         self.action_logs = {
             'started_at': started_at,
             'steps':{},
