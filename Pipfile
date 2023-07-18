@@ -8,6 +8,7 @@ toml = "*"
 rich = "*"
 biopython = "*"
 gitpython = "*"
+argparse = "*"
 
 [dev-packages]
 
