@@ -1,5 +1,5 @@
 
-from common.pipeline import load_config, Pipeline
+from common.pipeline import Pipeline
 
 from parse_class_i_locus_data import construct_class_i_locus_allele_lists
 from parse_class_i_bulk_data import construct_class_i_bulk_allele_lists
@@ -42,13 +42,7 @@ steps = {
     }
 }
 
-
-
-
-
 pipeline = Pipeline(steps, console, logoutput=True)
-
-config = load_config()
 
 pipeline.run_step('1')
 
