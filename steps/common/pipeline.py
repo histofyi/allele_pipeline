@@ -5,7 +5,7 @@ import git
 import datetime
 from rich import print
 
-def load_config(verbose:bool=False) -> Dict:
+def load_config(console, verbose:bool=False) -> Dict:
     """ 
     Loads the configuration file for the pipline and returns a dictionary of values
 
@@ -20,7 +20,8 @@ def load_config(verbose:bool=False) -> Dict:
         for k,v in this_config.items():
             config[k] = v
     if verbose:
-        print (config)
+        console.print("Configuration")
+        console.print (config)
     return config
 
 
@@ -68,7 +69,6 @@ class Pipeline():
         pipeline_version = repo.head.object.hexsha
         pipeline_name = repository_name.replace('_',' ').capitalize()
         self.steps = steps
-        self.config = load_config(verbose)
         self.action_logs = {
             'started_at': started_at,
             'steps':{},
@@ -79,6 +79,8 @@ class Pipeline():
         self.console = console
         self.console.print ("")
         self.console.rule(title="Initialising...")
+        
+        self.config = load_config(self.console, verbose=verbose)
         self.console.print ("")
         self.console.print (f"{pipeline_name} (commit sha : {pipeline_version}) started at {started_at}")
         self.console.print ("")
