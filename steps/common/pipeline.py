@@ -1,8 +1,15 @@
 from typing import Dict, List, Optional, Union
-import toml
-import git
 
+import toml
+import json
+
+import git
+from importlib.metadata import version
+from dparse import parse, filetypes
+        
 import datetime
+import hashlib
+
 from rich import print
 
 def load_config(console, verbose:bool=False) -> Dict:
@@ -61,30 +68,41 @@ def get_current_time() -> str:
     return datetime.datetime.now().isoformat()
 
 
+def get_dependencies() -> Dict:
+    with open('Pipfile','r') as file:
+        pipfile = parse(file.read(), file_type=filetypes.pipfile)
+    json_pipfile = json.loads(pipfile.json())
+    dependencies = [dependency['name'] for dependency in json_pipfile['dependencies']]
+    versions = [version(dependency) for dependency in dependencies]
+    return {k:v for k,v in zip(dependencies,versions)}
+        
+
+
 class Pipeline():
     def __init__(self, steps:Dict, console, verbose:bool=False, logoutput:bool=False, devmode:bool=True):
         repo = git.Repo(search_parent_directories=True)
         started_at = get_current_time()
-        repository_name = repo.remotes.origin.url.split('.git')[0].split('/')[-1]
-        pipeline_version = repo.head.object.hexsha
-        pipeline_name = repository_name.replace('_',' ').capitalize()
+        self.repository_name = repo.remotes.origin.url.split('.git')[0].split('/')[-1]
+        self.pipeline_version = repo.head.object.hexsha
+        self.pipeline_name = self.repository_name.replace('_',' ').capitalize()
         self.steps = steps
         self.action_logs = {
             'started_at': started_at,
             'steps':{},
-            'repository_name': repository_name,
-            'pipeline_name': pipeline_name,
-            'pipeline_version': pipeline_version
+            'repository_name': self.repository_name,
+            'pipeline_name': self.pipeline_name,
+            'pipeline_version': self.pipeline_version
         }
         self.console = console
         self.console.print ("")
         self.console.rule(title="Initialising...")
-        
+    
         self.config = load_config(self.console, verbose=verbose)
+    
         self.console.print ("")
-        self.console.print (f"{pipeline_name} (commit sha : {pipeline_version}) started at {started_at}")
+        self.console.print (f"{self.pipeline_name} (commit sha : {self.pipeline_version}) started at {started_at}")
         self.console.print ("")
-        self.console.rule(title=f"Running {pipeline_name}")
+        self.console.rule(title=f"Running {self.pipeline_name}")
         self.console.print ("")
         self.console.print(f"There are {len(self.steps)} steps to this pipeline")
         for step in steps:
@@ -136,3 +154,18 @@ class Pipeline():
             return self.config[key]
         else: 
             return None
+        
+
+
+    def finalise(self):
+        self.action_logs['dependencies'] = get_dependencies()
+        self.action_logs['completed_at'] = get_current_time()
+        start = datetime.datetime.fromisoformat(self.action_logs['started_at'])
+        end = datetime.datetime.fromisoformat(self.action_logs['completed_at'])
+        delta = end - start
+        datehash = hashlib.sha256(self.action_logs['completed_at'].encode('utf-8')).hexdigest()
+        logfilename = f"{self.config['LOG_PATH']}/{self.repository_name}-{datehash}.json"
+        with open(logfilename, 'w') as logfile:
+            logfile.write(json.dumps(self.action_logs, sort_keys=True, indent=4))
+        self.console.print(f"Pipeline completed at {self.action_logs['completed_at']} : Execution time : {delta}") 
+        return self.action_logs
