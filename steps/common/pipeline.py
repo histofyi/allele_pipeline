@@ -5,7 +5,7 @@ import git
 import datetime
 from rich import print
 
-def load_config(verbose:str=False) -> Dict:
+def load_config(verbose:bool=False) -> Dict:
     """ 
     Loads the configuration file for the pipline and returns a dictionary of values
 
