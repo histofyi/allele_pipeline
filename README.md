@@ -10,23 +10,32 @@ The pipeline will need to have three directories created in the root of the fold
 - `output`
 - `logs`
 
-These are not included in this repository as they will be filled with the outputs of steps. 
+These are not included in this repository as they will be filled with the outputs of steps. They are automatically created if they don't already exist in the first step of the pipeline.
 
-The pipeline also needs a configuration file created `config.toml`
+The pipeline also needs some TOML formatted configuration files which are modular and assembled into a confg dictionary by the load_config() function in common/pipeline.py.
 
-This must include the following parameters:
+There are four files in total. 
 
-IPD_IMGT_HLA_PROT = "https://github.com/ANHIG/IMGTHLA/raw/Latest/hla_prot.fasta"
-IPD_MHC_PROT = "https://github.com/ANHIG/IPDMHC/raw/Latest/MHC_prot.fasta"
-H2_CLASS_I_PROT = "https://raw.githubusercontent.com/histofyi/datasets/main/h2_prot.fasta"
+### config.toml
 
-HLA_CLASS_I = ["A","B","C","E","F","G"]
-H2_CLASS_I = ["K","D","L"]
+Included in the repository. This file contains the filenames for the other configuration files.
 
-WAREHOUSE_PATH = "/Users/username/code/warehouse"
-PIPELINE_PATH = "/Users/username/code/allele_pipeline"
-TMP_PATH = "/Users/username/code/allele_pipeline/tmp"
+### constants.toml
 
-OUTPUT_PATH = "/Users/username/code/allele_pipeline/output"
-LOG_PATH = "/Users/username/code/allele_pipeline/logs"
+Included in the repository. This file contains constants used by the pipeline.
 
+### paths.toml
+
+Not included in the repository as it will depend on each user's directory structure.
+
+Parameters for the following keys must be included.
+
+- `WAREHOUSE_PATH`
+- `PIPELINE_PATH`
+- `TMP_PATH`
+- `OUTPUT_PATH`
+- `LOG_PATH`
+
+### secrets.toml
+
+Currently not yet used. Will be used for uploading logs and compiled files to AMAZON S3 for the histo.fyi implementation of this pipeline.

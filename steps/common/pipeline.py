@@ -13,7 +13,13 @@ def load_config() -> Dict:
         dict: a dictionary of configuration variables 
 
     """
-    config = toml.load('config.toml')
+    config = {}
+    files = toml.load('config.toml')
+    for file in files:
+        this_config = toml.load(f"{files[file]}")
+        for k,v in this_config.items():
+            config[k] = v
+    print (config)
     return config
 
 
