@@ -52,8 +52,8 @@ def run_pipeline(verbose:bool=False, force:bool=False, logoutput:bool=True) -> D
         pipeline.run_step('3', substep=i, locus=locus, species_slug='hla', sequence_set='IPD_IMGT_HLA_PROT')
         i+=1
 
-    construct_class_i_bulk_allele_lists('IPD-MHC')
-
+    pipeline.run_step('4', sequence_set='IPD_MHC_PROT')
+        
     h2_class_i = pipeline.get_config_item('H2_CLASS_I')
 
     j = 1
