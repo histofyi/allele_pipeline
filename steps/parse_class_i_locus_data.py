@@ -145,6 +145,7 @@ def construct_class_i_locus_allele_lists(config:Dict, **kwargs) -> Dict:
     locus = kwargs['locus']
     species_slug = kwargs['species_slug']
     sequence_set = kwargs['sequence_set']
+    output_path = kwargs['output_path']
     if 'verbose' in kwargs:
         verbose = kwargs['verbose']
     else:
@@ -186,7 +187,7 @@ def construct_class_i_locus_allele_lists(config:Dict, **kwargs) -> Dict:
     for sequence_type in ['cytoplasmic_sequences', 'gdomain_sequences', 'pocket_pseudosequences']:
         
         # generate a directory path for each type of sequence
-        directory_path = f"{config['OUTPUT_PATH']}/{sequence_type}"
+        directory_path = f"{output_path}/processed_data/{sequence_type}"
 
         # generate a filename for the specific file for the locus
         filename = f"{directory_path}/{species_slug}_{locus.lower()}.json"
@@ -199,7 +200,7 @@ def construct_class_i_locus_allele_lists(config:Dict, **kwargs) -> Dict:
             json.dump(sequence_list, json_file, sort_keys=True, indent=4)
 
     # now generate a dictionary file for alleles 
-    directory_path = f"{config['OUTPUT_PATH']}/protein_alleles"
+    directory_path = f"{output_path}/processed_data/protein_alleles"
     filename = f"{directory_path}/{species_slug}_{locus.lower()}.json"
     with open(filename, "w") as json_file:
         json.dump(protein_alleles, json_file, sort_keys=True, indent=4)

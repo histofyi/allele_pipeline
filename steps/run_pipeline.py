@@ -10,7 +10,7 @@ from create_folder_structure import create_folder_structure
 from rich.console import Console
 import argparse
 
-def run_pipeline(verbose:bool=False, force:bool=False, logoutput:bool=True) -> Dict:
+def run_pipeline(verbose:bool=False, force:bool=False, mode:str='development') -> Dict:
     steps = {
         '1':{
             'function':create_folder_structure,
@@ -39,7 +39,7 @@ def run_pipeline(verbose:bool=False, force:bool=False, logoutput:bool=True) -> D
         }
     }
 
-    pipeline = Pipeline(steps, Console(), logoutput=True, verbose=False)
+    pipeline = Pipeline(steps, Console(), force=force, verbose=verbose, mode=mode)
 
     pipeline.run_step('1')
 
@@ -62,6 +62,8 @@ def run_pipeline(verbose:bool=False, force:bool=False, logoutput:bool=True) -> D
         j+=1
 
     action_logs = pipeline.finalise()
+
+    print (mode)
     
     return action_logs
 
@@ -93,7 +95,7 @@ def main():
     print (verbose)
     print (force)
     print (mode)
-    output = run_pipeline()
+    output = run_pipeline(verbose=verbose, force=force, mode=mode)
 
 
 if __name__ == '__main__':

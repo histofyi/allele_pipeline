@@ -136,6 +136,11 @@ def construct_class_i_bulk_allele_lists(config:Dict, **kwargs):
         Dict: the action dictionary for this step which will be stored in the pipeline log
     """
     sequence_set = kwargs['sequence_set']
+    output_path = kwargs['output_path']
+    if 'verbose' in kwargs:
+        verbose = kwargs['verbose']
+    else:
+        verbose = False
     
     protein_alleles, cytoplasmic_sequences, gdomain_sequences, pocket_pseudosequences, stats, unmatched = generate_lists(sequence_set)
 
@@ -166,7 +171,7 @@ def construct_class_i_bulk_allele_lists(config:Dict, **kwargs):
 
 
     for sequence_type in ['cytoplasmic_sequences', 'gdomain_sequences', 'pocket_pseudosequences']:
-        directory_path = f"output/{sequence_type}"
+        directory_path = f"{output_path}/processed_data/{sequence_type}"
         sequences = eval(sequence_type)
         if sequences:
             for species in sequences:
@@ -176,7 +181,7 @@ def construct_class_i_bulk_allele_lists(config:Dict, **kwargs):
                     with open(filename, "w") as json_file:
                         json.dump(sequence_list, json_file, sort_keys=True, indent=4)
     
-    directory_path = f"output/protein_alleles"
+    directory_path = f"{output_path}/processed_data/protein_alleles"
     for locus_slug in protein_alleles:
         filename = f"{directory_path}/{locus_slug}.json"
         with open(filename, "w") as json_file:

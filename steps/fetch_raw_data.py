@@ -10,7 +10,11 @@ console = Console()
 from common.helpers import slugify
 from common.pipeline import get_current_time
 
-def fetch_raw_datasets(config:Dict, force:bool=False, verbose:bool=False):
+def fetch_raw_datasets(config:Dict, **kwargs):
+    
+    
+    verbose = kwargs['verbose']
+    force = kwargs['force']
 
     action_log = {}
     for datasource in ['IPD_IMGT_HLA_PROT','IPD_MHC_PROT', 'H2_CLASS_I_PROT']:
