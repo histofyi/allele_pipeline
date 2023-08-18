@@ -1,3 +1,4 @@
+MODULES=["PATHS","CONSTANTS","SECRETS"]
 PATHS="paths.toml"
 CONSTANTS="constants.toml"
 SECRETS="secrets.toml"
