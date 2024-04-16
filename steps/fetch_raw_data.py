@@ -19,7 +19,7 @@ def fetch_raw_datasets(config:Dict, **kwargs):
     action_log = {}
     for datasource in ['IPD_IMGT_HLA_PROT','IPD_MHC_PROT', 'H2_CLASS_I_PROT']:
         
-        filepath = f'{config["TMP_PATH"]}/{datasource.lower()}.fasta'
+        filepath = f"{config['PATHS']['TMP_PATH']}/{datasource.lower()}.fasta"
 
         downloaded_at = None
         

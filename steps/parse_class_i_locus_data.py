@@ -54,7 +54,7 @@ def generate_lists_for_locus(locus:str, species_slug, sequence_set:str, config:D
             allele_slug = None
             # increment the total sequence counter, only incrementing for class I sequences
             total_sequences += 1 
-            sequence_data = process_sequence(str(entry.seq), config['IMGT_POCKET_RESIDUES'])
+            sequence_data = process_sequence(str(entry.seq), config['CONSTANTS']['IMGT_POCKET_RESIDUES'])
             # we only want alleles with sequences long enough to include cytoplasmic domains
             if sequence_data['appropriate_length'] and sequence_data['cytoplasmic_sequence']: 
                 if len(sequence_data['cytoplasmic_sequence']) > 270:
@@ -87,7 +87,7 @@ def generate_lists_for_locus(locus:str, species_slug, sequence_set:str, config:D
                     # now add the unique sequences to the different sequence dictionaries
                     # TODO this looks optimisable
 
-                    for sequence_type in config['SEQUENCE_TYPES']:
+                    for sequence_type in config['CONSTANTS']['SEQUENCE_TYPES']:
                         
                         this_sequence_type = eval(sequence_type)
                         # sequence types in the config are plural, in the protein_allele dictionary they're singular

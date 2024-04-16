@@ -71,39 +71,36 @@ def run_pipeline(verbose:bool=False, force:bool=False, mode:str='development') -
 
     pipeline = Pipeline(steps, Console(), force=force, verbose=verbose, mode=mode)
 
-    hla_class_i = ['hla_a', 'hla_b', 'hla_c', 'hla_e', 'hla_f', 'hla_g']
+    hla_class_i = pipeline.get_config_item('CONSTANTS')['HLA_CLASS_I']
+    h2_class_i = ["K","D","L"]
 
-    #pipeline.run_step('1')
+    pipeline.run_step('1')
 
-    #pipeline.run_step('2')
+    pipeline.run_step('2')
 
-    #hla_class_i = pipeline.get_config_item('HLA_CLASS_I')
+    i = 1
+    for locus in hla_class_i:
+        pipeline.run_step('3', substep=i, locus=locus, species_slug='hla', sequence_set='IPD_IMGT_HLA_PROT')
+        i+=1
 
-    #i = 1
-    #for locus in hla_class_i:
-    #    pipeline.run_step('3', substep=i, locus=locus, species_slug='hla', sequence_set='IPD_IMGT_HLA_PROT')
-    #    i+=1
+    pipeline.run_step('4', sequence_set='IPD_MHC_PROT')
 
-    #pipeline.run_step('4', sequence_set='IPD_MHC_PROT')
-        
-    #h2_class_i = pipeline.get_config_item('H2_CLASS_I')
+    j = 1
+    for locus in h2_class_i:
+        pipeline.run_step('5', substep=j, locus=locus, species_slug='h2', sequence_set='H2_CLASS_I_PROT')
+        j+=1
 
-    #j = 1
-    #for locus in h2_class_i:
-    #    pipeline.run_step('5', substep=j, locus=locus, species_slug='h2', sequence_set='H2_CLASS_I_PROT')
-    #    j+=1
+    i = 1
+    for locus in hla_class_i:
+        print (locus)
+        pipeline.run_step('6', locus=locus)
+        i+=1
 
-    #i = 1
-    #for locus in hla_class_i:
-    #    print (locus)
-    #    pipeline.run_step('6', locus=locus)
-    #    i+=1
-
-    ##i = 1
-    #for locus in hla_class_i:
-    #    print (locus)
-    #    pipeline.run_step('7', locus=locus)
-    #    i+=1
+    i = 1
+    for locus in hla_class_i:
+        print (locus)
+        pipeline.run_step('7', locus=locus)
+        i+=1
 
     i = 1
     for locus in hla_class_i:

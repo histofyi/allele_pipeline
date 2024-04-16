@@ -63,9 +63,10 @@ def create_folder_structure(config, **kwargs) -> Dict:
     }
 
     # create a list of folders from the config
-    folders = [folder for folder in config['SEQUENCE_TYPES']]
-    # append the `protein_alleles` folder
-    folders.append('protein_alleles')
+    folders = [folder for folder in config['CONSTANTS']['SEQUENCE_TYPES']]
+    for folder in config['CONSTANTS']['PROCESSED_DATA_TYPES']:
+        folders.append(folder)
+
 
     # iterate through the folders in the list
     for folder in folders:
@@ -73,12 +74,17 @@ def create_folder_structure(config, **kwargs) -> Dict:
         folder_status = create_folder(folder_path, verbose)
         action_log[folder_status].append(folder)
 
+    for tabular_output in config['CONSTANTS']['TABULAR_DATA_TYPES']:
+        folder_path = f"{output_path}/tabular_data/{tabular_output}"
+        folder_status = create_folder(folder_path, verbose)
+        action_log[folder_status].append(tabular_output)
+
     # create the local logfile folder
     folder_status = create_folder(log_path, verbose)
     action_log[folder_status].append('log')
 
     # create the local tmp folder
-    folder_status = create_folder(config['TMP_PATH'], verbose)
+    folder_status = create_folder(config['PATHS']['TMP_PATH'], verbose)
     action_log[folder_status].append('tmp')
 
     return action_log
