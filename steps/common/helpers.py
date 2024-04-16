@@ -1,3 +1,7 @@
+from typing import List
+
+import csv
+
 def slugify(string:str) -> str:
     slug_char = '_'
     to_replace = [' ','-','.',',','[',']','{','}','(',')','/','\\','*',':']
@@ -6,3 +10,8 @@ def slugify(string:str) -> str:
             string = string.replace(replace_me, slug_char)
     return string.lower()
 
+
+def write_csv_file(filename:str, table:List):
+    with open(filename, 'w', newline='\n') as filehandle:
+        writer = csv.writer(filehandle)
+        writer.writerows(table)  
