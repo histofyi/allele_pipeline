@@ -22,13 +22,14 @@ def load_config(console, verbose:bool=False) -> Dict:
     """
     config = {}
     files = toml.load('config.toml')
-    for file in files:
+
+    for file in files['MODULES']:
         this_config = toml.load(f"{files[file]}")
+        config[file] = {}
         for k,v in this_config.items():
-            config[k] = v
-    if verbose:
-        console.print("Configuration")
-        console.print (config)
+            config[file][k] = v
+    #self.console.print("Configuration")
+    #self.console.print (config)
     return config
 
 
@@ -107,6 +108,7 @@ class Pipeline():
         
         started_at = get_current_time()
 
+
         kwargs['verbose'] = self.verbose
         kwargs['force'] = self.force
         kwargs['output_path'] = self.output_path
@@ -155,11 +157,11 @@ class Pipeline():
     def initialise(self):
         if self.mode == 'release':
             # switch the output directory to the warehouse
-            self.output_path = f"{self.config['WAREHOUSE_PATH']}/{self.config['PIPELINE_WAREHOUSE_FOLDER']}"
-            self.log_path = f"{self.config['WAREHOUSE_PATH']}/logs/{self.config['PIPELINE_WAREHOUSE_FOLDER']}"
+            self.output_path = f"{self.config['PATHS']['WAREHOUSE_PATH']}/{self.config['PATHS']['PIPELINE_WAREHOUSE_FOLDER']}"
+            self.log_path = f"{self.config['PATHS']['WAREHOUSE_PATH']}/logs/{self.config['PATHS']['PIPELINE_WAREHOUSE_FOLDER']}"
         else:
-            self.output_path = self.config['OUTPUT_PATH']
-            self.log_path = self.config['LOG_PATH']
+            self.output_path = self.config['PATHS']['OUTPUT_PATH']
+            self.log_path = self.config['PATHS']['LOG_PATH']
 
         started_at = get_current_time()
         self.action_logs = {
