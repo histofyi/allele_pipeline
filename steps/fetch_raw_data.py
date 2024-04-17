@@ -29,7 +29,7 @@ def fetch_raw_datasets(config:Dict, **kwargs):
         if not os.path.exists(filepath) or force is True:
 
             # pull the url from the config
-            fasta_url = config[datasource]
+            fasta_url = config['CONSTANTS'][datasource]
 
             # if verbose is true, output to the terminal
             if verbose:
