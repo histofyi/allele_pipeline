@@ -54,6 +54,8 @@ def create_db_from_tabular_representations(config:Dict, **kwargs) -> None:
 
     """
     loci = kwargs['loci']
+
+    relationship_types = config['CONSTANTS']['RELATIONSHIP_TYPES']
     
 
     # combine allele sequence information
@@ -73,10 +75,10 @@ def create_db_from_tabular_representations(config:Dict, **kwargs) -> None:
 
     allele_relationship_filenames = []
 
-    for mode in ['motif','structure']:
+    for relationship_type in relationship_types:
         for locus in loci:
             if locus not in ['hla_e', 'hla_f', 'hla_g']:
-                allele_relationship_filenames.append(f"output/tabular_data/relationships/{locus.lower()}_{mode}.csv")
+                allele_relationship_filenames.append(f"output/tabular_data/relationships/{locus.lower()}_{relationship_type}.csv")
     
     table = combine_csv_files(allele_relationship_filenames)
 

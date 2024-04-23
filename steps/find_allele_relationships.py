@@ -24,7 +24,7 @@ def find_closest_alleles_function(allele_slug:str, known_alleles:List[str], know
         closest_alleles = [{
             'nearest_known_allele':allele_slug,
             'distance':0,
-            'relationship':f"experimentally_determined_{mode}",
+            'relationship_label':f"experimentally_determined_{mode}",
             'polymorphisms': None
         }]
     # if it doesn't, we'll first check if the allele pseudosequence 
@@ -42,7 +42,7 @@ def find_closest_alleles_function(allele_slug:str, known_alleles:List[str], know
                 closest_alleles = [{
                     'nearest_known_allele':known_allele,
                     'distance':0,
-                    'relationship':'exact_pseudosequence_match',
+                    'relationship_label':'exact_pseudosequence_match',
                     'polymorphisms': None                
                 }]
                 break
@@ -61,7 +61,7 @@ def find_closest_alleles_function(allele_slug:str, known_alleles:List[str], know
                     lowest_scores[score].append({
                         'nearest_known_allele':known_allele,
                         'distance':score,
-                        'relationship':"nearest_pseudosequence_match",
+                        'relationship_label':"nearest_pseudosequence_match",
                         'polymorphisms': polymorphisms
                     })
         if not closest_alleles:
@@ -70,13 +70,13 @@ def find_closest_alleles_function(allele_slug:str, known_alleles:List[str], know
     return closest_alleles
 
 
-def tabulate_relationships(relationships:Dict, mode:str, pocket_positions:List, distance_frequency_cutoff:int=10) -> List:
+def tabulate_relationships(relationships:Dict, relationship_type:str, pocket_positions:List, distance_frequency_cutoff:int=10) -> List:
     rows = []
     outliers = []
 
     
 
-    labels = ['allele_slug', 'known_allele_slug', 'distance', 'relationship_type', 'mode']
+    labels = ['allele_slug', 'known_allele_slug', 'distance', 'relationship_label', 'relationship_type']
 
     for position in pocket_positions:
         labels.append(f"alpha_{position}")
@@ -89,7 +89,7 @@ def tabulate_relationships(relationships:Dict, mode:str, pocket_positions:List, 
             outliers.append(allele)
         else:
             for relationship in relationships[allele]:
-                row = [allele, relationship["nearest_known_allele"], relationship['distance'], relationship['relationship'], mode]
+                row = [allele, relationship["nearest_known_allele"], relationship['distance'], relationship['relationship_label'], relationship_type]
                 for position in pocket_positions:
                     if relationship['polymorphisms'] and position in relationship['polymorphisms']:
                         row.append(f"{relationship['polymorphisms'][position]['from']}{position}{relationship['polymorphisms'][position]['to']}")
@@ -111,14 +111,25 @@ def find_allele_relationships(config:Dict, **kwargs) -> None:
     """
     test_locus = kwargs['locus']
     loci = kwargs['loci']
-    known_motif_alleles = config['CONSTANTS']['MOTIF_ALLELES']
-    known_structure_alleles = config['CONSTANTS']['STRUCTURE_ALLELES']
+
+    relationship_types = config['CONSTANTS']['RELATIONSHIP_TYPES']
+
+    known_alleles = {}
+
+    for relationship_type in relationship_types:
+        config_key = f"{relationship_type.upper()}_ALLELES"
+        known_alleles[relationship_type] = config['CONSTANTS'][config_key]
+
     pocket_positions = config['CONSTANTS']['IMGT_POCKET_RESIDUES']
 
     # we'll initialise some datastructures that we'll use to store the pseudosequences for the known motifs and structures and the alleles we want to test
-    motif_pseudosequences = {}
-    structure_pseudosequences = {}
+
     alleles_to_test = None
+
+    pseudosequences = {}
+
+    for relationship_type in relationship_types:
+        pseudosequences[relationship_type] = {}
 
     # we'll iterate through the loci 
     for locus in loci:
@@ -130,15 +141,12 @@ def find_allele_relationships(config:Dict, **kwargs) -> None:
         # we'll iterate through the alleles in the raw alleles
         for allele in raw_alleles:
             
-            # we'll check if the allele is in the known motifs
-            if allele in known_motif_alleles:
-                motif_pseudosequences[allele] = raw_alleles[allele]['pocket_pseudosequence']
-
-            # we'll check if the allele is in the known structures
-            if allele in known_structure_alleles:
-                structure_pseudosequences[allele] = raw_alleles[allele]['pocket_pseudosequence']
-            
-        # if the locus is the locus we're testing, we'll add the alleles to the alleles to test dictionary
+            for relationship_type in relationship_types:
+                # we'll check if the allele is in the known motifs
+                if allele in known_alleles[relationship_type]:
+                    pseudosequences[relationship_type][allele] = raw_alleles[allele]['pocket_pseudosequence']
+                    
+       # if the locus is the locus we're testing, we'll add the alleles to the alleles to test dictionary
         if locus == test_locus:
             alleles_to_test = {}
 
@@ -150,26 +158,23 @@ def find_allele_relationships(config:Dict, **kwargs) -> None:
                     alleles_to_test[allele] = raw_alleles[allele]['pocket_pseudosequence']
 
     # we'll initialise some datastructures to store the related alleles
-    motif_related_alleles = {}
-    structure_related_alleles = {}
+
 
 
     print (f"Testing alleles for {test_locus}")
 
-    related_alleles = {
-        'motif':{},
-        'structure':{}
-    }
+    related_alleles = {}
+    outlier_alleles = {}
+
+    for relationship_type in relationship_types:
+        related_alleles[relationship_type] = {}
+        outlier_alleles[relationship_type] = {}
 
     for allele_slug in alleles_to_test:
-        related_alleles['motif'][allele_slug] = find_closest_alleles_function(allele_slug, known_motif_alleles, motif_pseudosequences, alleles_to_test[allele_slug],pocket_positions,  mode='motif')
-        related_alleles['structure'][allele_slug] = find_closest_alleles_function(allele_slug, known_structure_alleles, structure_pseudosequences, alleles_to_test[allele_slug],pocket_positions, mode='structure')
-    
-    outlier_alleles = {
-        'motif':[],
-        'structure':[]
-    }
+        for relationship_type in relationship_types:            
+            related_alleles[relationship_type][allele_slug] = find_closest_alleles_function(allele_slug, known_alleles[relationship_type], pseudosequences[relationship_type], alleles_to_test[allele_slug],pocket_positions,  mode=relationship_type)
 
+    
     # metrics needed
 
     # which alleles have the highest distance from the nearest known allele both structurally and from a motif standpoint
@@ -186,7 +191,7 @@ def find_allele_relationships(config:Dict, **kwargs) -> None:
     distance_frequency_cutoff = 10
     outlier_alleles = {}
 
-    for mode in ['motif', 'structure']:
+    for mode in relationship_types:
         output_filename = f"output/tabular_data/relationships/{test_locus.lower()}_{mode}.csv"
         print (output_filename)
         table, outlier_alleles['motif'] = tabulate_relationships(related_alleles[mode], mode, pocket_positions, distance_frequency_cutoff)
