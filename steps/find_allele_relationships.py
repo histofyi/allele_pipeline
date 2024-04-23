@@ -5,7 +5,14 @@ from Levenshtein import hamming
 import json
 import csv
 
-def find_closest_alleles_function(allele_slug:str, known_alleles:List[str], known_pseudosequences:List, allele_pseudosequence:str, mode:str='motif') -> Dict:
+def locate_polymorphisms(allele_pseudosequence:str, match_pseudosequence:str, pocket_positions:List) -> Dict:
+    polymorphisms = {}
+    for i, position in enumerate(pocket_positions):
+        if allele_pseudosequence[i] != match_pseudosequence[i]:
+            polymorphisms[position] = {'from':match_pseudosequence[i], 'to':allele_pseudosequence[i]}
+    return polymorphisms
+
+def find_closest_alleles_function(allele_slug:str, known_alleles:List[str], known_pseudosequences:List, allele_pseudosequence:str, pocket_positions:List, mode:str='motif') -> Dict:
     closest_alleles = None
     
     # the experimental label is set to true if the allele slug matches that of a known motif or structure. 
@@ -18,6 +25,7 @@ def find_closest_alleles_function(allele_slug:str, known_alleles:List[str], know
             'nearest_known_allele':allele_slug,
             'distance':0,
             'relationship':f"experimentally_determined_{mode}",
+            'polymorphisms': None
         }]
     # if it doesn't, we'll first check if the allele pseudosequence 
     else:
@@ -34,7 +42,8 @@ def find_closest_alleles_function(allele_slug:str, known_alleles:List[str], know
                 closest_alleles = [{
                     'nearest_known_allele':known_allele,
                     'distance':0,
-                    'relationship':'exact_pseudosequence_match'
+                    'relationship':'exact_pseudosequence_match',
+                    'polymorphisms': None                
                 }]
                 break
             # if the pseudosequence doesn't match exactly, we calculate the hamming distance between the pseudosequence for the allele and for the known test allele
@@ -42,6 +51,7 @@ def find_closest_alleles_function(allele_slug:str, known_alleles:List[str], know
                 score = hamming(allele_pseudosequence, known_pseudosequences[known_allele])
                 # if the score is less than or equal to the minimum score, we update the minimum score and add the allele to the lowest scores dictionary
                 if score <= min_score or score in lowest_scores:
+                    polymorphisms = locate_polymorphisms(allele_pseudosequence, known_pseudosequences[known_allele], pocket_positions)
                     if score < min_score:
                         min_score = score
                     # if the score isn't already in the lowest scores dictionary, we add it
@@ -51,7 +61,8 @@ def find_closest_alleles_function(allele_slug:str, known_alleles:List[str], know
                     lowest_scores[score].append({
                         'nearest_known_allele':known_allele,
                         'distance':score,
-                        'relationship':"nearest_pseudosequence_match"
+                        'relationship':"nearest_pseudosequence_match",
+                        'polymorphisms': polymorphisms
                     })
         if not closest_alleles:
             closest_alleles = lowest_scores[min_score]
@@ -59,11 +70,17 @@ def find_closest_alleles_function(allele_slug:str, known_alleles:List[str], know
     return closest_alleles
 
 
-def tabulate_relationships(relationships:Dict, mode:str, distance_frequency_cutoff:int=10) -> List:
+def tabulate_relationships(relationships:Dict, mode:str, pocket_positions:List, distance_frequency_cutoff:int=10) -> List:
     rows = []
     outliers = []
 
+    
+
     labels = ['allele_slug', 'known_allele_slug', 'distance', 'relationship_type', 'mode']
+
+    for position in pocket_positions:
+        labels.append(f"alpha_{position}")
+
 
     rows.append(labels)
     
@@ -73,6 +90,11 @@ def tabulate_relationships(relationships:Dict, mode:str, distance_frequency_cuto
         else:
             for relationship in relationships[allele]:
                 row = [allele, relationship["nearest_known_allele"], relationship['distance'], relationship['relationship'], mode]
+                for position in pocket_positions:
+                    if relationship['polymorphisms'] and position in relationship['polymorphisms']:
+                        row.append(f"{relationship['polymorphisms'][position]['from']}{position}{relationship['polymorphisms'][position]['to']}")
+                    else:
+                        row.append('')
                 rows.append(row)
     return rows, outliers
 
@@ -91,7 +113,7 @@ def find_allele_relationships(config:Dict, **kwargs) -> None:
     loci = kwargs['loci']
     known_motif_alleles = config['CONSTANTS']['MOTIF_ALLELES']
     known_structure_alleles = config['CONSTANTS']['STRUCTURE_ALLELES']
-
+    pocket_positions = config['CONSTANTS']['IMGT_POCKET_RESIDUES']
 
     # we'll initialise some datastructures that we'll use to store the pseudosequences for the known motifs and structures and the alleles we want to test
     motif_pseudosequences = {}
@@ -140,8 +162,8 @@ def find_allele_relationships(config:Dict, **kwargs) -> None:
     }
 
     for allele_slug in alleles_to_test:
-        related_alleles['motif'][allele_slug] = find_closest_alleles_function(allele_slug, known_motif_alleles, motif_pseudosequences, alleles_to_test[allele_slug], mode='motif')
-        related_alleles['structure'][allele_slug] = find_closest_alleles_function(allele_slug, known_structure_alleles, structure_pseudosequences, alleles_to_test[allele_slug], mode='structure')
+        related_alleles['motif'][allele_slug] = find_closest_alleles_function(allele_slug, known_motif_alleles, motif_pseudosequences, alleles_to_test[allele_slug],pocket_positions,  mode='motif')
+        related_alleles['structure'][allele_slug] = find_closest_alleles_function(allele_slug, known_structure_alleles, structure_pseudosequences, alleles_to_test[allele_slug],pocket_positions, mode='structure')
     
     outlier_alleles = {
         'motif':[],
@@ -167,7 +189,7 @@ def find_allele_relationships(config:Dict, **kwargs) -> None:
     for mode in ['motif', 'structure']:
         output_filename = f"output/tabular_data/relationships/{test_locus.lower()}_{mode}.csv"
         print (output_filename)
-        table, outlier_alleles['motif'] = tabulate_relationships(related_alleles[mode], mode, distance_frequency_cutoff)
+        table, outlier_alleles['motif'] = tabulate_relationships(related_alleles[mode], mode, pocket_positions, distance_frequency_cutoff)
         print (len(table))
 
         with open(output_filename, 'w', newline='\n') as f:
