@@ -48,7 +48,7 @@ def create_tabular_representations(config:Dict, **kwargs) -> None:
 
     print (pocket_positions)
 
-    labels = ['allele_slug', 'allele', 'allele_group_slug', 'allele_group', 'locus_slug', 'locus', 'species', 'netmhcpan_pseudosequence']
+    labels = ['allele_slug', 'allele', 'allele_id', 'allele_url', 'allele_group_slug', 'allele_group', 'locus_slug', 'locus', 'species', 'netmhcpan_pseudosequence']
 
     for position in pocket_positions:
         labels.append(f"alpha_{position}")
@@ -58,9 +58,12 @@ def create_tabular_representations(config:Dict, **kwargs) -> None:
 
     species_slug = 'homo_sapiens'
     for allele in protein_alleles:
+        allele_id = protein_alleles[allele]['alleles'][0]['id']
         row = [
             allele,
             deslugify_allele(allele),
+            f"imgt/hla:{allele_id}",
+            f"https://www.ebi.ac.uk/ipd/imgt/hla/alleles/allele/?accession={allele_id}",
             get_allele_group(allele),
             deslugify_allele_group(allele),
             locus,
@@ -68,6 +71,7 @@ def create_tabular_representations(config:Dict, **kwargs) -> None:
             species_slug,
             protein_alleles[allele]['pocket_pseudosequence'],
         ]
+        print (row)
         for position in protein_alleles[allele]['pocket_pseudosequence']:
             row.append(position)
         table.append(row)
