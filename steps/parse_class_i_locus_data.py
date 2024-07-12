@@ -40,6 +40,9 @@ def generate_lists_for_locus(locus:str, species_slug, sequence_set:str, config:D
 
     # counter for number of sequences in the dataset
     total_sequences = 0
+
+    suffixed_alleles = {}
+
     for entry in fasta_reader(filename):
         if verbose:
             print (entry)
@@ -63,47 +66,52 @@ def generate_lists_for_locus(locus:str, species_slug, sequence_set:str, config:D
                     
                     if species_slug not in non_standard_nomenclature_species:
                         # we need to check if the allele name has a modifier, such as N, Q etc
+                        modifier = protein_allele_name[-1]
                         if protein_allele_name[-1] in allele_name_modifiers:
-                            protein_allele_name = protein_allele_name[:-1]
+                            if not modifier in suffixed_alleles:
+                                suffixed_alleles[modifier] = []
+                            suffixed_alleles[modifier].append(protein_allele_name)
+                            protein_allele_name = None
                     
-                    # slugify the cleaned allele name
-                    allele_slug = slugify(protein_allele_name)
+                    if protein_allele_name:
+                        # slugify the cleaned allele name
+                        allele_slug = slugify(protein_allele_name)
 
-                    # and check if it's in the protein allele dict
-                    if allele_slug not in protein_alleles:
-                        protein_alleles[allele_slug] = {
-                            'sequences':[],
-                            'alleles':[],
-                            'canonical_allele':'',
-                            'canonical_sequence':'',
-                            'gdomain_sequence':sequence_data['gdomain_sequence'],
-                            'pocket_pseudosequence':sequence_data['pocket_pseudosequence']
-                        }
-                    # and append the specific allele information    
-                    protein_alleles[allele_slug]['alleles'].append(allele_info)
-
-                    if sequence_data['cytoplasmic_sequence'] not in  protein_alleles[allele_slug]['sequences']:
-                        protein_alleles[allele_slug]['sequences'].append(sequence_data['cytoplasmic_sequence'])
-                    
-                    # now add the unique sequences to the different sequence dictionaries
-                    # TODO this looks optimisable
-
-                    for sequence_type in config['CONSTANTS']['SEQUENCE_TYPES']:
-                        
-                        this_sequence_type = eval(sequence_type)
-                        # sequence types in the config are plural, in the protein_allele dictionary they're singular
-                        sequence_type = sequence_type[:-1]
-
-                        # if the sequence is not in the specific sequence type dictionary then we need to create an entry
-                        if sequence_data[sequence_type] not in this_sequence_type:
-                            this_sequence_type[sequence_data[sequence_type]] = {
+                        # and check if it's in the protein allele dict
+                        if allele_slug not in protein_alleles:
+                            protein_alleles[allele_slug] = {
+                                'sequences':[],
                                 'alleles':[],
-                                'canonical_allele':{}
+                                'canonical_allele':'',
+                                'canonical_sequence':'',
+                                'gdomain_sequence':sequence_data['gdomain_sequence'],
+                                'pocket_pseudosequence':sequence_data['pocket_pseudosequence']
                             }
-                        # and then append the allele info to the alleles list for the sequence
-                        this_sequence_type[sequence_data[sequence_type]]['alleles'].append(allele_info)
+                        # and append the specific allele information    
+                        protein_alleles[allele_slug]['alleles'].append(allele_info)
 
-    return total_sequences, protein_alleles, cytoplasmic_sequences, gdomain_sequences, pocket_pseudosequences
+                        if sequence_data['cytoplasmic_sequence'] not in  protein_alleles[allele_slug]['sequences']:
+                            protein_alleles[allele_slug]['sequences'].append(sequence_data['cytoplasmic_sequence'])
+                        
+                        # now add the unique sequences to the different sequence dictionaries
+                        # TODO this looks optimisable
+
+                        for sequence_type in config['CONSTANTS']['SEQUENCE_TYPES']:
+                            
+                            this_sequence_type = eval(sequence_type)
+                            # sequence types in the config are plural, in the protein_allele dictionary they're singular
+                            sequence_type = sequence_type[:-1]
+
+                            # if the sequence is not in the specific sequence type dictionary then we need to create an entry
+                            if sequence_data[sequence_type] not in this_sequence_type:
+                                this_sequence_type[sequence_data[sequence_type]] = {
+                                    'alleles':[],
+                                    'canonical_allele':{}
+                                }
+                            # and then append the allele info to the alleles list for the sequence
+                            this_sequence_type[sequence_data[sequence_type]]['alleles'].append(allele_info)
+
+    return total_sequences, protein_alleles, cytoplasmic_sequences, gdomain_sequences, pocket_pseudosequences, suffixed_alleles
 
 
 def parse_sequence_dict(sequences:Dict, species_slug:str) -> Dict:
@@ -152,7 +160,7 @@ def construct_class_i_locus_allele_lists(config:Dict, **kwargs) -> Dict:
     else:
         verbose = False
 
-    total_sequences, protein_alleles, cytoplasmic_sequences, gdomain_sequences, pocket_pseudosequences = generate_lists_for_locus(locus, species_slug, sequence_set, config, verbose)
+    total_sequences, protein_alleles, cytoplasmic_sequences, gdomain_sequences, pocket_pseudosequences, suffixed_alleles = generate_lists_for_locus(locus, species_slug, sequence_set, config, verbose)
 
     # now we'll iterate through the alleles to find the canonical allele (the one with the lowest number)
     for allele in protein_alleles:
@@ -200,6 +208,12 @@ def construct_class_i_locus_allele_lists(config:Dict, **kwargs) -> Dict:
         with open(filename, "w") as json_file:
             json.dump(sequence_list, json_file, sort_keys=True, indent=4)
 
+    # now we'll output information on the null alleles to a file
+    directory_path = f"{output_path}/processed_data/allele_suffixes"
+    filename = f"{directory_path}/{species_slug}_{locus.lower()}.json"
+    with open(filename, "w") as json_file:
+        json.dump(suffixed_alleles, json_file, sort_keys=True, indent=4)
+
     # now generate a dictionary file for alleles 
     directory_path = f"{output_path}/processed_data/protein_alleles"
     filename = f"{directory_path}/{species_slug}_{locus.lower()}.json"
@@ -222,7 +236,8 @@ def construct_class_i_locus_allele_lists(config:Dict, **kwargs) -> Dict:
         'alleles_found': len(protein_alleles),
         'unique_cytoplasmic_sequences': len(cytoplasmic_sequences),
         'unique_gdomain_sequences': len(gdomain_sequences),
-        'unique_pocket_pseudosequences': len(pocket_pseudosequences)
+        'unique_pocket_pseudosequences': len(pocket_pseudosequences), 
+        'suffixed_alleles_types': {key: len(suffixed_alleles[key]) for key in  list(suffixed_alleles.keys())}
     }
 
     return action_log
