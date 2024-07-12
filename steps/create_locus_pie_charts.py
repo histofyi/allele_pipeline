@@ -33,8 +33,6 @@ def generate_allele_group_pie_chart(allele_groups:Dict, allele_count:int, locus:
     others = []
 
     for allele_group in allele_groups:
-        print (allele_group)
-        print (allele_groups[allele_group])
         allele_groups[allele_group]['percent'] = allele_groups[allele_group]['count']*100/allele_count
 
     labels, values, others, others_values = top_n(allele_groups, 9)
@@ -102,13 +100,16 @@ def create_locus_pie_charts(config:Dict, **kwargs) -> None:
 
     """
     locus = kwargs['locus']
+    species_stem = kwargs['species_stem']
+    
+    locus_slug = f"{species_stem}_{locus.lower()}"
 
-    input_filename = f"output/processed_data/allele_groups/{locus.lower()}.json"
+
+    input_filename = f"output/processed_data/allele_groups/{locus_slug}.json"
 
     with open(input_filename, 'r') as allele_groups_file:
         allele_groups = json.load(allele_groups_file)
     
-    print (locus)
 
     allele_count = 0
     allele_group_count = 0
@@ -119,12 +120,9 @@ def create_locus_pie_charts(config:Dict, **kwargs) -> None:
         alleles_count = len(allele_groups[allele_group])
         allele_group_stats[allele_group] = {'count':alleles_count, 'percent':0}
 
-        
         allele_count += alleles_count
         allele_group_count += 1
 
-    print (allele_group_stats)
-    print (allele_count)
 
     png_data, svg_data, alt_text = generate_allele_group_pie_chart(allele_group_stats, allele_count, locus)
 

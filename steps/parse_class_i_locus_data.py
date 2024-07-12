@@ -32,6 +32,7 @@ def generate_lists_for_locus(locus:str, species_slug, sequence_set:str, config:D
     """
     filename = f"tmp/{sequence_set.lower()}.fasta"
 
+
     protein_alleles = {}
     cytoplasmic_sequences = {}
     gdomain_sequences = {}

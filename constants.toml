@@ -1,7 +1,7 @@
 IPD_IMGT_HLA_PROT = "https://github.com/ANHIG/IMGTHLA/raw/Latest/hla_prot.fasta"
 IPD_MHC_PROT = "https://github.com/ANHIG/IPDMHC/raw/Latest/MHC_prot.fasta"
 H2_CLASS_I_PROT = "https://raw.githubusercontent.com/histofyi/datasets/main/h2_prot.fasta"
-HLA_CLASS_I = ["hla_a","hla_b","hla_c","hla_e","hla_f","hla_g"]
+HLA_CLASS_I = ["A","B","C","E","F","G"]
 H2_CLASS_I = ["K","D","L"]
 SEQUENCE_TYPES = ["cytoplasmic_sequences", "gdomain_sequences", "pocket_pseudosequences"]
 PROCESSED_DATA_TYPES = ["protein_alleles","reference_alleles","allele_groups","pie_charts"]

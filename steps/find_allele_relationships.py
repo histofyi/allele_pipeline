@@ -12,6 +12,7 @@ def locate_polymorphisms(allele_pseudosequence:str, match_pseudosequence:str, po
             polymorphisms[position] = {'from':match_pseudosequence[i], 'to':allele_pseudosequence[i]}
     return polymorphisms
 
+
 def find_closest_alleles_function(allele_slug:str, known_alleles:List[str], known_pseudosequences:List, allele_pseudosequence:str, pocket_positions:List, mode:str='motif') -> Dict:
     closest_alleles = None
     
@@ -111,6 +112,9 @@ def find_allele_relationships(config:Dict, **kwargs) -> None:
     """
     test_locus = kwargs['locus']
     loci = kwargs['loci']
+    species_stem = kwargs['species_stem']
+
+    test_locus_slug = f"{species_stem}_{test_locus.lower()}" 
 
     relationship_types = config['CONSTANTS']['RELATIONSHIP_TYPES']
 
@@ -133,8 +137,9 @@ def find_allele_relationships(config:Dict, **kwargs) -> None:
 
     # we'll iterate through the loci 
     for locus in loci:
+        locus_slug = f"{species_stem}_{locus.lower()}"
         # we'll load the pseudosequences for the known motifs and structures
-        input_filename = f"output/processed_data/protein_alleles/{locus.lower()}.json"
+        input_filename = f"output/processed_data/protein_alleles/{locus_slug}.json"
         with open(input_filename, 'r') as protein_alleles_filehandle:
             raw_alleles = json.load(protein_alleles_filehandle)
 
@@ -147,7 +152,7 @@ def find_allele_relationships(config:Dict, **kwargs) -> None:
                     pseudosequences[relationship_type][allele] = raw_alleles[allele]['pocket_pseudosequence']
                     
        # if the locus is the locus we're testing, we'll add the alleles to the alleles to test dictionary
-        if locus == test_locus:
+        if locus_slug == test_locus_slug:
             alleles_to_test = {}
 
             # we'll iterate through the alleles in the raw alleles
@@ -161,7 +166,7 @@ def find_allele_relationships(config:Dict, **kwargs) -> None:
 
 
 
-    print (f"Testing alleles for {test_locus}")
+    print (f"Testing alleles for {test_locus_slug}")
 
     related_alleles = {}
     outlier_alleles = {}
@@ -192,7 +197,7 @@ def find_allele_relationships(config:Dict, **kwargs) -> None:
     outlier_alleles = {}
 
     for mode in relationship_types:
-        output_filename = f"output/tabular_data/relationships/{test_locus.lower()}_{mode}.csv"
+        output_filename = f"output/tabular_data/relationships/{test_locus_slug}_{mode}.csv"
         print (output_filename)
         table, outlier_alleles['motif'] = tabulate_relationships(related_alleles[mode], mode, pocket_positions, distance_frequency_cutoff)
         print (len(table))

@@ -83,42 +83,37 @@ def run_pipeline(verbose:bool=False, force:bool=False, mode:str='development') -
         pipeline.run_step('3', substep=i, locus=locus, species_slug='hla', sequence_set='IPD_IMGT_HLA_PROT')
         i+=1
 
-    pipeline.run_step('4', sequence_set='IPD_MHC_PROT')
+    #pipeline.run_step('4', sequence_set='IPD_MHC_PROT')
 
-    j = 1
-    for locus in h2_class_i:
-        pipeline.run_step('5', substep=j, locus=locus, species_slug='h2', sequence_set='H2_CLASS_I_PROT')
-        j+=1
+    #j = 1
+    #for locus in h2_class_i:
+    #    pipeline.run_step('5', substep=j, locus=locus, species_slug='h2', sequence_set='H2_CLASS_I_PROT')
+    #    j+=1
 
     i = 1
     for locus in hla_class_i:
-        print (locus)
-        pipeline.run_step('6', locus=locus)
+        pipeline.run_step('6', locus=locus, species_stem='hla')
         i+=1
 
     i = 1
     for locus in hla_class_i:
-        print (locus)
-        pipeline.run_step('7', locus=locus)
+        pipeline.run_step('7', locus=locus, species_stem='hla')
         i+=1
 
     i = 1
     for locus in hla_class_i:
-        print (locus)
-        pipeline.run_step('8', locus=locus)
+        pipeline.run_step('8', locus=locus, species_stem='hla')
         i+=1
 
     i = 1
     for locus in hla_class_i:
-        if locus not in ['hla_e', 'hla_f', 'hla_g']:
-            pipeline.run_step('9', locus=locus, loci=hla_class_i)
+        if locus not in ['e', 'f', 'g']:
+            pipeline.run_step('9', locus=locus, loci=hla_class_i, species_stem='hla')
             i+=1
     
-    pipeline.run_step('10', loci=hla_class_i)
+    pipeline.run_step('10', loci=hla_class_i, species_stem='hla')
 
     action_logs = pipeline.finalise()
-
-    print (mode)
     
     return action_logs
 

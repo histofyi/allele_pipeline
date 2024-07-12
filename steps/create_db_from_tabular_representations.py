@@ -54,7 +54,7 @@ def create_db_from_tabular_representations(config:Dict, **kwargs) -> None:
 
     """
     loci = kwargs['loci']
-
+    species_stem = kwargs['species_stem']
     relationship_types = config['CONSTANTS']['RELATIONSHIP_TYPES']
     
 
@@ -63,7 +63,8 @@ def create_db_from_tabular_representations(config:Dict, **kwargs) -> None:
     allele_sequence_filenames = []
 
     for locus in loci:
-        allele_sequence_filenames.append(f"output/tabular_data/alleles/{locus.lower()}.csv")
+        locus_slug = f"{species_stem}_{locus.lower()}"
+        allele_sequence_filenames.append(f"output/tabular_data/alleles/{locus_slug}.csv")
     table = combine_csv_files(allele_sequence_filenames)
 
     alleles_output_filename = "output/tabular_data/alleles.csv"
@@ -77,8 +78,9 @@ def create_db_from_tabular_representations(config:Dict, **kwargs) -> None:
 
     for relationship_type in relationship_types:
         for locus in loci:
-            if locus not in ['hla_e', 'hla_f', 'hla_g']:
-                allele_relationship_filenames.append(f"output/tabular_data/relationships/{locus.lower()}_{relationship_type}.csv")
+            locus_slug = f"{species_stem}_{locus.lower()}"
+            if locus_slug not in ['hla_e', 'hla_f', 'hla_g']:
+                allele_relationship_filenames.append(f"output/tabular_data/relationships/{locus_slug}_{relationship_type}.csv")
     
     table = combine_csv_files(allele_relationship_filenames)
 

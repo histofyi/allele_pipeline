@@ -14,8 +14,13 @@ def construct_reference_allele_lists(config:Dict, **kwargs) -> None:
     """
     
     locus = kwargs['locus']
+    species_stem = kwargs['species_stem']
+    verbose = kwargs['verbose']
 
-    input_filename = f"output/processed_data/protein_alleles/{locus.lower()}.json"
+    locus_slug = f"{species_stem}_{locus.lower()}"
+
+
+    input_filename = f"output/processed_data/protein_alleles/{locus_slug}.json"
 
     with open(input_filename, 'r') as alleles_file:
         alleles = json.load(alleles_file)
@@ -41,15 +46,15 @@ def construct_reference_allele_lists(config:Dict, **kwargs) -> None:
         if allele not in allele_groups[allele_group]:
             allele_groups[allele_group].append(allele)
 
-    output_file = f"output/processed_data/reference_alleles/{locus.lower()}.json"
+    output_file = f"output/processed_data/reference_alleles/{locus_slug}.json"
     with open(output_file, 'w') as reference_alleles_file:
         alleles = json.dump(reference_alleles, reference_alleles_file)
 
-    output_file = f"output/processed_data/allele_groups/{locus.lower()}.json"
+    output_file = f"output/processed_data/allele_groups/{locus_slug}.json"
     with open(output_file, 'w') as allele_groups_file:
         alleles = json.dump(allele_groups, allele_groups_file)
 
-
-    print (reference_alleles)
-    print ('')
-    print (allele_groups)
+    if verbose:
+        print (reference_alleles)
+        print ('')
+        print (allele_groups)
