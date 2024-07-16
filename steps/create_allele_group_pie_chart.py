@@ -170,7 +170,7 @@ def top_n(group_stats:Dict, n:int=10) -> Tuple[List, List, List, List]:
     others = []
     for item in sorted_data:
         if i <= n:
-            if item[1]['percentage'] > 2:
+            if item[1]['percentage'] > 5:
                 top_n.append(item[0])
                 i += 1
             else:
@@ -230,7 +230,7 @@ def create_pie_chart(labels:List, percentages:List, counts:List, others:List, ot
     # we'll create the figure object
     fig = Figure()
     # and set the size
-    fig.set_figwidth(figsize+6)
+    fig.set_figwidth(figsize+5)
     fig.set_figheight(figsize-3)
     ax = fig.subplots()
     bbox_props = dict(boxstyle="square,pad=0.2", fc="w", ec="k", lw=0)
@@ -245,18 +245,18 @@ def create_pie_chart(labels:List, percentages:List, counts:List, others:List, ot
         horizontalalignment = {-1: "right", 1: "left"}[int(np.sign(x))]
         connectionstyle = f"angle,angleA=0,angleB={ang}"
         kw["arrowprops"].update({"connectionstyle": connectionstyle})
-        ax.annotate(labels[i], xy=(x, y), xytext=(1.35*np.sign(x), 1.4*y),horizontalalignment=horizontalalignment, **kw, size=32)
+        ax.annotate(labels[i], xy=(x, y), xytext=(1.35*np.sign(x), 1.4*y),horizontalalignment=horizontalalignment, **kw, size=20)
 
     # finally we'll save the figure as an SVG   
     filename = f"output/processed_data/pie_charts/allele_groups/{allele_group}.svg"
-    fig.savefig(filename, format="svg")
+    fig.savefig(filename, format="svg", bbox_inches='tight', pad_inches=0.5)
 
     # and we'll close the figure object to free up memory
     fig = None
     pass
 
 
-def create_allele_group_pie_chart(locus_slug:str):
+def create_allele_group_pie_chart(config:Dict, **kwargs):
     """
     This function takes a locus slug and creates a pie chart for each allele group.
 
@@ -267,6 +267,11 @@ def create_allele_group_pie_chart(locus_slug:str):
         None
     """
     # first, we'll load the pseudosequences for the locus
+    locus = kwargs['locus']
+    species_stem = kwargs['species_stem']
+    
+    locus_slug = f"{species_stem}_{locus.lower()}"
+
     input_filename = f"output/processed_data/pocket_pseudosequences/{locus_slug}.json"
     with open(input_filename, 'r') as f:
         pseudosequences = json.load(f)
@@ -291,8 +296,8 @@ def create_allele_group_pie_chart(locus_slug:str):
 
 
 def main():
-    locus_slug = 'hla_a'
-    create_allele_group_pie_chart(locus_slug)
+
+    create_allele_group_pie_chart({}, locus='B', species_stem='hla')
 
 
 

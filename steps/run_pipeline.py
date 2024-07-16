@@ -8,6 +8,7 @@ from fetch_raw_data import fetch_raw_datasets
 from create_folder_structure import create_folder_structure
 from construct_reference_allele_lists import construct_reference_allele_lists
 from create_locus_pie_charts import create_locus_pie_charts
+from create_allele_group_pie_chart import create_allele_group_pie_chart
 from create_tabular_representations import create_tabular_representations
 from create_db_from_tabular_representations import create_db_from_tabular_representations
 from find_allele_relationships import find_allele_relationships
@@ -53,9 +54,9 @@ def run_pipeline(verbose:bool=False, force:bool=False, mode:str='development') -
             'list_item': 'Creating the pie charts for each locus'
         },
         '8': {
-            'function': create_tabular_representations,
-            'title_template': 'Creating the a tabular representation for each locus',
-            'list_item': 'Creating the a tabular representation for each locus'
+            'function': create_allele_group_pie_chart,
+            'title_template': 'Creating the pie charts for each allele group',
+            'list_item': 'Creating the pie charts for each allele group'
         },
         '9': {
             'function': find_allele_relationships,
@@ -63,6 +64,11 @@ def run_pipeline(verbose:bool=False, force:bool=False, mode:str='development') -
             'list_item': 'Creating a dataset of alleles closest/distant to those with know motifs'
         },
         '10': {
+            'function': create_tabular_representations,
+            'title_template': 'Creating the a tabular representation for each locus',
+            'list_item': 'Creating the a tabular representation for each locus'
+        },
+        '11': {
             'function': create_db_from_tabular_representations,
             'title_template': 'Creating a sqlite database from the tabular representations',
             'list_item': 'Creating a sqlite database from the tabular representations'
@@ -74,44 +80,60 @@ def run_pipeline(verbose:bool=False, force:bool=False, mode:str='development') -
     hla_class_i = pipeline.get_config_item('CONSTANTS')['HLA_CLASS_I']
     h2_class_i = ["K","D","L"]
 
+    # create the folder structure
     pipeline.run_step('1')
 
+    # fetch the raw datasets
     pipeline.run_step('2')
 
+    # parse the IPD sequence set for HLA
     i = 1
     for locus in hla_class_i:
         pipeline.run_step('3', substep=i, locus=locus, species_slug='hla', sequence_set='IPD_IMGT_HLA_PROT')
         i+=1
 
+    # parse the IPD sequence set for non-human Class I
     #pipeline.run_step('4', sequence_set='IPD_MHC_PROT')
 
+    # parse the H2 sequence set for H2
     #j = 1
     #for locus in h2_class_i:
     #    pipeline.run_step('5', substep=j, locus=locus, species_slug='h2', sequence_set='H2_CLASS_I_PROT')
     #    j+=1
 
+    # build reference allele lists
     i = 1
     for locus in hla_class_i:
         pipeline.run_step('6', locus=locus, species_stem='hla')
         i+=1
 
+    # create the pie charts for each locus
     i = 1
     for locus in hla_class_i:
         pipeline.run_step('7', locus=locus, species_stem='hla')
         i+=1
 
+    # create the pie charts for each allele group
     i = 1
     for locus in hla_class_i:
         pipeline.run_step('8', locus=locus, species_stem='hla')
         i+=1
 
+    # find allele relationships
     i = 1
     for locus in hla_class_i:
         if locus not in ['e', 'f', 'g']:
             pipeline.run_step('9', locus=locus, loci=hla_class_i, species_stem='hla')
             i+=1
     
-    pipeline.run_step('10', loci=hla_class_i, species_stem='hla')
+    # create the tabular representations for each locus
+    i = 1
+    for locus in hla_class_i:
+        pipeline.run_step('10', locus=locus, species_stem='hla')
+        i+=1
+
+    # create the sqlite database from the tabular representations
+    pipeline.run_step('11', loci=hla_class_i, species_stem='hla')
 
     action_logs = pipeline.finalise()
     
