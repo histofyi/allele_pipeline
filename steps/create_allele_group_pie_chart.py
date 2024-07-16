@@ -245,7 +245,7 @@ def create_pie_chart(labels:List, percentages:List, counts:List, others:List, ot
         horizontalalignment = {-1: "right", 1: "left"}[int(np.sign(x))]
         connectionstyle = f"angle,angleA=0,angleB={ang}"
         kw["arrowprops"].update({"connectionstyle": connectionstyle})
-        ax.annotate(labels[i], xy=(x, y), xytext=(1.35*np.sign(x), 1.4*y),horizontalalignment=horizontalalignment, **kw, size=20)
+        ax.annotate(labels[i], xy=(x, y), xytext=(1.35*np.sign(x), 1.4*y),horizontalalignment=horizontalalignment, **kw, size=30)
 
     # finally we'll save the figure as an SVG   
     filename = f"output/processed_data/pie_charts/allele_groups/{allele_group}.svg"
