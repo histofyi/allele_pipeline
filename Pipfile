@@ -18,6 +18,8 @@ csvs-to-sqlite = "*"
 pandas = "==1.4.0"
 levenshtein = "*"
 matplotlib-venn = "*"
+requests = "*"
+beautifulsoup4 = "*"
 
 [dev-packages]
 

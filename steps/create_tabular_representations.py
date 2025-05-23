@@ -37,16 +37,19 @@ def create_tabular_representations(config:Dict, **kwargs) -> None:
 
     """
     locus = kwargs['locus']
+    species_stem = kwargs['species_stem']
+    
+    locus_slug = f"{species_stem}_{locus.lower()}"
 
-    input_filename = f"output/processed_data/protein_alleles/{locus.lower()}.json"
-    output_filename = f"output/tabular_data/alleles/{locus.lower()}.csv"
+
+    input_filename = f"output/processed_data/protein_alleles/{locus_slug}.json"
+    output_filename = f"output/tabular_data/alleles/{locus_slug}.csv"
 
     with open(input_filename, 'r') as protein_alleles_filehandle:
         protein_alleles = json.load(protein_alleles_filehandle)
     
     pocket_positions = config['CONSTANTS']['IMGT_POCKET_RESIDUES']
 
-    print (pocket_positions)
 
     labels = ['allele_slug', 'allele', 'allele_id', 'allele_url', 'allele_group_slug', 'allele_group', 'locus_slug', 'locus', 'species', 'netmhcpan_pseudosequence']
 
@@ -57,22 +60,21 @@ def create_tabular_representations(config:Dict, **kwargs) -> None:
     table.append(labels)
 
     species_slug = 'homo_sapiens'
-    for allele in protein_alleles:
-        allele_id = protein_alleles[allele]['alleles'][0]['id']
+    for allele_slug in protein_alleles:
+        allele_id = protein_alleles[allele_slug]['alleles'][0]['id']
         row = [
-            allele,
-            deslugify_allele(allele),
+            allele_slug,
+            deslugify_allele(allele_slug),
             f"imgt/hla:{allele_id}",
             f"https://www.ebi.ac.uk/ipd/imgt/hla/alleles/allele/?accession={allele_id}",
-            get_allele_group(allele),
-            deslugify_allele_group(allele),
+            get_allele_group(allele_slug),
+            deslugify_allele_group(allele_slug),
             locus,
-            deslugify_locus(locus),
+            deslugify_locus(locus_slug),
             species_slug,
-            protein_alleles[allele]['pocket_pseudosequence'],
+            protein_alleles[allele_slug]['pocket_pseudosequence'],
         ]
-        print (row)
-        for position in protein_alleles[allele]['pocket_pseudosequence']:
+        for position in protein_alleles[allele_slug]['pocket_pseudosequence']:
             row.append(position)
         table.append(row)
         
