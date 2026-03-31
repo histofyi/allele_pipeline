@@ -20,6 +20,7 @@ levenshtein = "*"
 matplotlib-venn = "*"
 requests = "*"
 beautifulsoup4 = "*"
+country-converter = "*"
 
 [dev-packages]
 
