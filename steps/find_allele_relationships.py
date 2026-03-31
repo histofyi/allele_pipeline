@@ -12,7 +12,6 @@ def locate_polymorphisms(allele_pseudosequence:str, match_pseudosequence:str, po
             polymorphisms[position] = {'from':match_pseudosequence[i], 'to':allele_pseudosequence[i]}
     return polymorphisms
 
-
 def find_closest_alleles_function(allele_slug:str, known_alleles:List[str], known_pseudosequences:List, allele_pseudosequence:str, pocket_positions:List, mode:str='motif') -> Dict:
     closest_alleles = None
     
@@ -75,6 +74,7 @@ def tabulate_relationships(relationships:Dict, relationship_type:str, pocket_pos
     rows = []
     outliers = []
 
+    distance_counts = {}
     
 
     labels = ['allele_slug', 'known_allele_slug', 'distance', 'relationship_label', 'relationship_type']
@@ -90,6 +90,9 @@ def tabulate_relationships(relationships:Dict, relationship_type:str, pocket_pos
             outliers.append(allele)
         else:
             for relationship in relationships[allele]:
+                if relationship['distance'] not in distance_counts:
+                    distance_counts[relationship['distance']] = 0
+                distance_counts[relationship['distance']] += 1
                 row = [allele, relationship["nearest_known_allele"], relationship['distance'], relationship['relationship_label'], relationship_type]
                 for position in pocket_positions:
                     if relationship['polymorphisms'] and position in relationship['polymorphisms']:
@@ -97,7 +100,9 @@ def tabulate_relationships(relationships:Dict, relationship_type:str, pocket_pos
                     else:
                         row.append('')
                 rows.append(row)
-    return rows, outliers
+    
+    
+    return rows, outliers, distance_counts
 
 
 def find_allele_relationships(config:Dict, **kwargs) -> None:
@@ -112,9 +117,6 @@ def find_allele_relationships(config:Dict, **kwargs) -> None:
     """
     test_locus = kwargs['locus']
     loci = kwargs['loci']
-    species_stem = kwargs['species_stem']
-
-    test_locus_slug = f"{species_stem}_{test_locus.lower()}" 
 
     relationship_types = config['CONSTANTS']['RELATIONSHIP_TYPES']
 
@@ -137,9 +139,8 @@ def find_allele_relationships(config:Dict, **kwargs) -> None:
 
     # we'll iterate through the loci 
     for locus in loci:
-        locus_slug = f"{species_stem}_{locus.lower()}"
         # we'll load the pseudosequences for the known motifs and structures
-        input_filename = f"output/processed_data/protein_alleles/{locus_slug}.json"
+        input_filename = f"output/processed_data/protein_alleles/{locus.lower()}.json"
         with open(input_filename, 'r') as protein_alleles_filehandle:
             raw_alleles = json.load(protein_alleles_filehandle)
 
@@ -152,7 +153,7 @@ def find_allele_relationships(config:Dict, **kwargs) -> None:
                     pseudosequences[relationship_type][allele] = raw_alleles[allele]['pocket_pseudosequence']
                     
        # if the locus is the locus we're testing, we'll add the alleles to the alleles to test dictionary
-        if locus_slug == test_locus_slug:
+        if locus == test_locus:
             alleles_to_test = {}
 
             # we'll iterate through the alleles in the raw alleles
@@ -166,7 +167,7 @@ def find_allele_relationships(config:Dict, **kwargs) -> None:
 
 
 
-    print (f"Testing alleles for {test_locus_slug}")
+    print (f"Testing alleles for {test_locus}")
 
     related_alleles = {}
     outlier_alleles = {}
@@ -195,16 +196,27 @@ def find_allele_relationships(config:Dict, **kwargs) -> None:
     # we'll set the distance frequency cutoff to 10 to check for outliers
     distance_frequency_cutoff = 10
     outlier_alleles = {}
+    distance_count_set = {}
+    distance_filename = f"output/processed_data/relationships/{test_locus.lower()}_distances.json"
 
     for mode in relationship_types:
-        output_filename = f"output/tabular_data/relationships/{test_locus_slug}_{mode}.csv"
-        print (output_filename)
-        table, outlier_alleles['motif'] = tabulate_relationships(related_alleles[mode], mode, pocket_positions, distance_frequency_cutoff)
+        csv_filename = f"output/tabular_data/relationships/{test_locus.lower()}_{mode}.csv"
+        
+
+        table, outlier_alleles['motif'], distance_counts = tabulate_relationships(related_alleles[mode], mode, pocket_positions, distance_frequency_cutoff)
+        distance_count_set[mode] = distance_counts
         print (len(table))
 
-        with open(output_filename, 'w', newline='\n') as f:
+        with open(csv_filename, 'w', newline='\n') as f:
             writer = csv.writer(f)
             writer.writerows(table)
+
+    with open(distance_filename, 'w', newline='\n') as f:
+        json.dump(distance_count_set, f)
+        
+
+
+
 
     print (f"Alleles with potential issues to explore: {outlier_alleles}")
 
